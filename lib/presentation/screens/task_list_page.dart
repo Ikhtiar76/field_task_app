@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:field_task_app/presentation/screens/create_task_page.dart';
 import 'package:flutter/material.dart';
 
 class TasksListPage extends StatelessWidget {
@@ -14,7 +15,13 @@ class TasksListPage extends StatelessWidget {
     final isMediumScreen = screenWidth < 400;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Field Tasks'), elevation: 0),
+      appBar: AppBar(
+        title: const Text(
+          'Field Tasks',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        elevation: 0,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -33,6 +40,16 @@ class TasksListPage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blueGrey,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateTaskPage()),
+          );
+        },
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
