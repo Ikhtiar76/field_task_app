@@ -1,11 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:field_task_app/presentation/screens/create_task_page.dart';
+import 'package:field_task_app/features/task/presentation/screens/create_task_page.dart';
 import 'package:flutter/material.dart';
 
-class TasksListPage extends StatelessWidget {
-  const TasksListPage({super.key});
-  static const id = "task_list_page";
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+  static const id = "home_page";
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +21,8 @@ class TasksListPage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
