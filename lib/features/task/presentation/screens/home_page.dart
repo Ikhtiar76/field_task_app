@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: screenWidth * 0.04,

@@ -1,7 +1,11 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:field_task_app/core/utills/debugger/debugger.dart';
+import 'package:field_task_app/core/widgets/submit_button.dart';
+import 'package:field_task_app/features/task/presentation/widgets/custom_textfiled.dart';
+import 'package:field_task_app/features/task/presentation/widgets/date_picker.dart';
 import 'package:field_task_app/features/task/presentation/widgets/map_view.dart';
+import 'package:field_task_app/features/task/presentation/widgets/timer_picker.dart';
 import 'package:flutter/material.dart';
 
 class CreateTaskPage extends StatefulWidget {
@@ -37,7 +41,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
         foregroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: screenWidth * 0.05,
@@ -50,7 +54,10 @@ class _CreateTaskPageState extends State<CreateTaskPage>
               children: [
                 _buildSectionTitle('Task Title *'),
                 SizedBox(height: screenHeight * 0.005),
-                _buildTitleField(context),
+                CustomTextField(
+                  controller: _titleController,
+                  hint: 'Enter the task...',
+                ),
                 SizedBox(height: screenHeight * 0.015),
                 _buildSectionTitle('Due Time *'),
                 SizedBox(height: screenHeight * 0.005),
@@ -63,6 +70,13 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                 _buildSectionTitle('Choose Location *'),
                 SizedBox(height: screenHeight * 0.005),
                 ReusableMap(mode: MapMode.picker, onPick: (loc) {}),
+                SizedBox(height: screenHeight * 0.015),
+                SubmitButton(
+                  text: "Continue",
+                  onPressed: () {},
+                  color: Colors.blue,
+                ),
+
                 SizedBox(height: screenHeight * 0.1),
               ],
             ),
@@ -99,126 +113,21 @@ class _CreateTaskPageState extends State<CreateTaskPage>
     );
   }
 
-  Widget _buildTitleField(BuildContext context) {
-    return TextFormField(
-      controller: _titleController,
-      decoration: InputDecoration(
-        hintText: 'Enter task title...',
-        hintStyle: TextStyle(color: Colors.grey[500]),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-      ),
-      style: const TextStyle(fontSize: 12, color: Colors.black87),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter a task title';
-        }
-        return null;
-      },
-    );
-  }
-
   Widget _buildDeadlineRow(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     return Row(
       children: [
-        _buildTimePicker(context),
-        SizedBox(width: screenWidth * .01),
-        _buildDatePicker(context),
-      ],
-    );
-  }
-
-  Widget _buildDatePicker(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () async {
-          final dt = await showDatePicker(
-            context: context,
-            firstDate: DateTime.now().subtract(Duration(days: 365)),
-            lastDate: DateTime.now().add(Duration(days: 365)),
-            initialDate: DateTime.now(),
-          );
-          if (dt != null) {
-            setState(() {
-              _selectedDate = dt;
-            });
-          }
-        },
-        child: Container(
+        TimePickerField(
+          onTimeSelected: (value) {},
+          selectedTime: _selectedTime,
           height: 45,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.calendar_month_outlined,
-                color: Colors.grey[500],
-                size: 18,
-              ),
-              SizedBox(width: screenWidth * .01),
-              Text(
-                _selectedDate?.toIso8601String() ?? 'Select date...',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTimePicker(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return GestureDetector(
-      onTap: () async {
-        final tm = await showTimePicker(
-          context: context,
-          initialTime: TimeOfDay.now(),
-        );
-        if (tm != null) {
-          setState(() => _selectedTime = tm);
-        }
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8),
-        height: 45,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(6),
+        SizedBox(width: screenWidth * .01),
+        DatePickerField(
+          onDateSelected: (value) {},
+          selectedDate: _selectedDate,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(Icons.access_time, color: Colors.grey[500], size: 18),
-            SizedBox(width: screenWidth * .01),
-            Text(
-              _selectedTime != null
-                  ? _formatTime(_selectedTime!)
-                  : 'Select Time...',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[500],
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
