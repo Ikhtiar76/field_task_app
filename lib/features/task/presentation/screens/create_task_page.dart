@@ -2,11 +2,13 @@
 
 import 'package:field_task_app/core/utills/debugger/debugger.dart';
 import 'package:field_task_app/core/widgets/submit_button.dart';
+import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/widgets/custom_textfiled.dart';
 import 'package:field_task_app/features/task/presentation/widgets/date_picker.dart';
 import 'package:field_task_app/features/task/presentation/widgets/map_view.dart';
 import 'package:field_task_app/features/task/presentation/widgets/timer_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CreateTaskPage extends StatefulWidget {
   const CreateTaskPage({super.key});
@@ -57,6 +59,9 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                 CustomTextField(
                   controller: _titleController,
                   hint: 'Enter the task...',
+                  onChanged: (value) {
+                    context.read<CreateTaskBloc>().add(TitleChanged(value));
+                  },
                 ),
                 SizedBox(height: screenHeight * 0.015),
                 _buildSectionTitle('Due Time *'),
@@ -69,12 +74,37 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                 SizedBox(height: screenHeight * 0.015),
                 _buildSectionTitle('Choose Location *'),
                 SizedBox(height: screenHeight * 0.005),
-                ReusableMap(mode: MapMode.picker, onPick: (loc) {}),
+                ReusableMap(
+                  mode: MapMode.picker,
+                  onPick: (loc) {
+                    context.read<CreateTaskBloc>().add(LocationSelected(loc!));
+                  },
+                ),
                 SizedBox(height: screenHeight * 0.015),
-                SubmitButton(
-                  text: "Continue",
-                  onPressed: () {},
-                  color: Colors.blue,
+                BlocConsumer<CreateTaskBloc, CreateTaskState>(
+                  listener: (context, state) {
+                    if (state.isSuccess) {
+                      Navigator.pop(context);
+                    }
+
+                    if (state.error != null && state.error!.isNotEmpty) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(state.error!)));
+                    }
+                  },
+                  builder: (context, state) {
+                    return SubmitButton(
+                      text: state.isSubmitting ? null : "+ Add Task",
+                      isLoading: state.isSubmitting,
+                      onPressed: state.isSubmitting
+                          ? null
+                          : () {
+                              context.read<CreateTaskBloc>().add(SubmitTask());
+                            },
+                      color: Colors.blue,
+                    );
+                  },
                 ),
 
                 SizedBox(height: screenHeight * 0.1),
@@ -115,19 +145,27 @@ class _CreateTaskPageState extends State<CreateTaskPage>
 
   Widget _buildDeadlineRow(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    return Row(
-      children: [
-        TimePickerField(
-          onTimeSelected: (value) {},
-          selectedTime: _selectedTime,
-          height: 45,
-        ),
-        SizedBox(width: screenWidth * .01),
-        DatePickerField(
-          onDateSelected: (value) {},
-          selectedDate: _selectedDate,
-        ),
-      ],
+    return BlocBuilder<CreateTaskBloc, CreateTaskState>(
+      builder: (context, state) {
+        return Row(
+          children: [
+            TimePickerField(
+              onTimeSelected: (time) {
+                context.read<CreateTaskBloc>().add(TimeSelected(time));
+              },
+              selectedTime: state.selectedTime,
+              height: 45,
+            ),
+            SizedBox(width: screenWidth * .01),
+            DatePickerField(
+              onDateSelected: (date) {
+                context.read<CreateTaskBloc>().add(DateSelected(date));
+              },
+              selectedDate: state.selectedDate,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -167,13 +205,6 @@ class _CreateTaskPageState extends State<CreateTaskPage>
         ),
       ),
     );
-  }
-
-  String _formatTime(TimeOfDay time) {
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$hour:$minute $period';
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'package:field_task_app/core/utills/date_time_formats/date_time_formats.dart';
 import 'package:flutter/material.dart';
 
 class TimePickerField extends StatelessWidget {
@@ -13,12 +14,6 @@ class TimePickerField extends StatelessWidget {
     this.hintText = "Select Time...",
     this.height = 45,
   });
-
-  String _formatTime(TimeOfDay t) {
-    final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
-    final period = t.period == DayPeriod.am ? "AM" : "PM";
-    return "$hour:${t.minute.toString().padLeft(2, '0')} $period";
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +57,9 @@ class TimePickerField extends StatelessWidget {
             Icon(Icons.access_time, color: Colors.grey[500], size: 18),
             SizedBox(width: screenWidth * .01),
             Text(
-              selectedTime != null ? _formatTime(selectedTime!) : hintText,
+              selectedTime != null
+                  ? DateTimeFormats.formatTime(selectedTime!)
+                  : hintText,
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],

@@ -1,7 +1,10 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, unnecessary_to_list_in_spreads
 
+import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
+import 'package:field_task_app/features/task/presentation/blocs/home_cubit/home_cubit.dart';
 import 'package:field_task_app/features/task/presentation/screens/create_task_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -36,7 +39,7 @@ class HomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildActiveTasksSection(context),
-                SizedBox(height: screenHeight * 0.03),
+                SizedBox(height: screenHeight * .02),
                 _buildCompletedTasksSection(context),
               ],
             ),
@@ -45,11 +48,17 @@ class HomePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blueGrey,
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => CreateTaskPage()),
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => CreateTaskBloc(),
+                child: CreateTaskPage(),
+              ),
+            ),
           );
+          context.read<HomeCubit>().loadTasks();
         },
         child: Icon(Icons.add, color: Colors.white),
       ),
@@ -57,97 +66,77 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildActiveTasksSection(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 360;
+    return BlocBuilder<HomeCubit, HomeState>(
+      builder: (context, state) {
+        final activeTasks = state.tasks
+            .where((t) => t.isCompleted == false)
+            .toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.02),
-          child: Text(
-            'ACTIVE TASKS',
-            style: TextStyle(
-              fontSize: isSmallScreen ? 12 : 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-              letterSpacing: 1.0,
+        if (activeTasks.isEmpty) {
+          return const Text("No Active Tasks");
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'ACTIVE TASKS',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
-          ),
-        ),
-        _buildTaskCard(
-          context,
-          title: 'Equipment Installation',
-          time: '11:30 AM',
-          address: '456 Industrial Blvd',
-          dependency: null,
-          status: 'In Progress',
-          statusColor: Colors.blue,
-        ),
-        SizedBox(height: screenWidth * 0.03),
-        _buildTaskCard(
-          context,
-          title: 'Client Meeting - TechCorp',
-          time: '02:00 PM',
-          address: '789 Business Center',
-          dependency: null,
-          status: 'Pending',
-          statusColor: Colors.orange,
-        ),
-        SizedBox(height: screenWidth * 0.03),
-        _buildTaskCard(
-          context,
-          title: 'Maintenance Check - Unit 5',
-          time: '04:30 PM',
-          address: '321 Harbor View',
-          dependency: null,
-          status: 'Pending',
-          statusColor: Colors.orange,
-        ),
-        SizedBox(height: screenWidth * 0.03),
-        _buildTaskCard(
-          context,
-          title: 'Final Report Submission',
-          time: '06:00 PM',
-          address: '500 Corporate Plaza',
-          dependency: null,
-          status: 'Pending',
-          statusColor: Colors.orange,
-        ),
-      ],
+            const SizedBox(height: 10),
+
+            ...activeTasks.map((task) {
+              return _buildTaskCard(
+                context,
+                title: task.title,
+                time:
+                    "${task.dueHour}:${task.dueMinute.toString().padLeft(2, '0')}",
+                address: "${task.latitude}, ${task.longitude}",
+                dependency: task.parentTaskId,
+                status: "Pending",
+                statusColor: Colors.orange,
+              );
+            }).toList(),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildCompletedTasksSection(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 360;
+    return BlocBuilder<HomeCubit, HomeState>(
+      builder: (context, state) {
+        final completedTasks = state.tasks.where((t) => t.isCompleted).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.02),
-          child: Text(
-            'COMPLETED',
-            style: TextStyle(
-              fontSize: isSmallScreen ? 12 : 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
-              letterSpacing: 1.0,
+        if (completedTasks.isEmpty) {
+          return const Text("No Completed Tasks");
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'COMPLETED',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
-          ),
-        ),
-        _buildTaskCard(
-          context,
-          title: 'Site Inspection - Building A',
-          time: '09:00 AM',
-          address: '123 Main Street',
-          dependency: null,
-          status: 'Completed',
-          statusColor: Colors.green,
-          isCompleted: true,
-        ),
-      ],
+            const SizedBox(height: 10),
+
+            ...completedTasks.map((task) {
+              return _buildTaskCard(
+                context,
+                title: task.title,
+                time:
+                    "${task.dueHour}:${task.dueMinute.toString().padLeft(2, '0')}",
+                address: "${task.latitude}, ${task.longitude}",
+                dependency: task.parentTaskId,
+                status: "Completed",
+                statusColor: Colors.green,
+                isCompleted: true,
+              );
+            }).toList(),
+          ],
+        );
+      },
     );
   }
 
@@ -172,6 +161,7 @@ class HomePage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
       ),
+      margin: EdgeInsets.only(bottom: screenHeight * .01),
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.all(screenWidth * 0.04),

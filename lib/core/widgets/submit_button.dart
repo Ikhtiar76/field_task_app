@@ -1,45 +1,43 @@
 import 'package:flutter/material.dart';
 
 class SubmitButton extends StatelessWidget {
-  final String text;
-  final VoidCallback onPressed;
+  final String? text;
+  final VoidCallback? onPressed;
+  final bool isLoading;
   final Color color;
-  final Color textColor;
-  final double height;
-  final double borderRadius;
 
   const SubmitButton({
     super.key,
     required this.text,
     required this.onPressed,
-    this.color = Colors.black,
-    this.textColor = Colors.white,
-    this.height = 48,
-    this.borderRadius = 8,
+    required this.color,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-
-    return SizedBox(
-      width: width,
-      height: height,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: textColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(borderRadius),
-          ),
-          elevation: 0,
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+    return ElevatedButton(
+      onPressed: isLoading ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadiusGeometry.circular(8),
         ),
       ),
+      child: isLoading
+          ? const SizedBox(
+              height: 22,
+              width: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : Text(
+              text ?? "",
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
     );
   }
 }
