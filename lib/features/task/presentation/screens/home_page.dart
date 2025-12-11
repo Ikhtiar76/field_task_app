@@ -1,15 +1,21 @@
-// ignore_for_file: deprecated_member_use, unnecessary_to_list_in_spreads
+// ignore_for_file: deprecated_member_use, unnecessary_to_list_in_spreads, use_build_context_synchronously
 
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/blocs/home_cubit/home_cubit.dart';
 import 'package:field_task_app/features/task/presentation/screens/create_task_page.dart';
+import 'package:field_task_app/features/task/presentation/screens/task_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
   static const id = "home_page";
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -32,7 +38,7 @@ class HomePage extends StatelessWidget {
           physics: const ClampingScrollPhysics(),
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04,
+              horizontal: screenWidth * 0.05,
               vertical: screenHeight * 0.02,
             ),
             child: Column(
@@ -69,7 +75,7 @@ class HomePage extends StatelessWidget {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
         final activeTasks = state.tasks
-            .where((t) => t.isCompleted == false)
+            .where((t) => t.status.toLowerCase() != 'completed')
             .toList();
 
         if (activeTasks.isEmpty) {
@@ -87,14 +93,30 @@ class HomePage extends StatelessWidget {
 
             ...activeTasks.map((task) {
               return _buildTaskCard(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BlocProvider(
+                        create: (context) => CreateTaskBloc(),
+                        child: TaskDetailsScreen(taskModel: task),
+                      ),
+                    ),
+                  );
+                  context.read<HomeCubit>().loadTasks();
+                },
                 context,
                 title: task.title,
                 time:
                     "${task.dueHour}:${task.dueMinute.toString().padLeft(2, '0')}",
                 address: "${task.latitude}, ${task.longitude}",
                 dependency: task.parentTaskId,
-                status: "Pending",
-                statusColor: Colors.orange,
+                status: task.status,
+                statusColor: task.status == "completed"
+                    ? Colors.green
+                    : task.status == "in_progress"
+                    ? Colors.blue
+                    : Colors.orange,
               );
             }).toList(),
           ],
@@ -106,7 +128,9 @@ class HomePage extends StatelessWidget {
   Widget _buildCompletedTasksSection(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
-        final completedTasks = state.tasks.where((t) => t.isCompleted).toList();
+        final completedTasks = state.tasks
+            .where((t) => t.status.toLowerCase() == 'completed')
+            .toList();
 
         if (completedTasks.isEmpty) {
           return const Text("No Completed Tasks");
@@ -123,6 +147,7 @@ class HomePage extends StatelessWidget {
 
             ...completedTasks.map((task) {
               return _buildTaskCard(
+                onTap: () {},
                 context,
                 title: task.title,
                 time:
@@ -142,6 +167,7 @@ class HomePage extends StatelessWidget {
 
   Widget _buildTaskCard(
     BuildContext context, {
+    required void Function() onTap,
     required String title,
     required String time,
     required String address,
@@ -156,82 +182,85 @@ class HomePage extends StatelessWidget {
     final isSmallScreen = screenWidth < 360;
     final isMediumScreen = screenWidth < 400;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      margin: EdgeInsets.only(bottom: screenHeight * .01),
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(screenWidth * 0.04),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: isSmallScreen ? 14 : 16,
-                          fontWeight: FontWeight.w600,
-                          color: isCompleted ? Colors.grey : Colors.black,
-                          decoration: isCompleted
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        margin: EdgeInsets.only(bottom: screenHeight * .01),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(screenWidth * 0.04),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 14 : 16,
+                            fontWeight: FontWeight.w600,
+                            color: isCompleted ? Colors.grey : Colors.black,
+                            decoration: isCompleted
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: screenHeight * 0.008),
+                        SizedBox(height: screenHeight * 0.008),
 
-                      _buildDetailRow(context, Icons.access_time, time),
+                        _buildDetailRow(context, Icons.access_time, time),
 
-                      _buildDetailRow(context, Icons.location_on, address),
+                        _buildDetailRow(context, Icons.location_on, address),
 
-                      if (dependency != null) ...[
-                        SizedBox(height: screenHeight * 0.004),
-                        _buildDetailRow(
-                          context,
-                          Icons.link,
-                          dependency,
-                          isItalic: true,
-                        ),
+                        if (dependency != null) ...[
+                          SizedBox(height: screenHeight * 0.004),
+                          _buildDetailRow(
+                            context,
+                            Icons.link,
+                            dependency,
+                            isItalic: true,
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSmallScreen ? 8 : 12,
-                    vertical: isSmallScreen ? 4 : 6,
-                  ),
-                  constraints: BoxConstraints(minWidth: screenWidth * 0.15),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Center(
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 10 : 12,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 8 : 12,
+                      vertical: isSmallScreen ? 4 : 6,
+                    ),
+                    constraints: BoxConstraints(minWidth: screenWidth * 0.15),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Center(
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 10 : 12,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

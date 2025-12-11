@@ -24,7 +24,7 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       latitude: fields[4] as double?,
       longitude: fields[5] as double?,
       parentTaskId: fields[6] as String?,
-      isCompleted: fields[7] as bool,
+      status: fields[7] as String,
     );
   }
 
@@ -47,7 +47,7 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       ..writeByte(6)
       ..write(obj.parentTaskId)
       ..writeByte(7)
-      ..write(obj.isCompleted);
+      ..write(obj.status);
   }
 
   @override

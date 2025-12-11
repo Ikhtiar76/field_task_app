@@ -47,5 +47,19 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
         emit(state.copyWith(isSubmitting: false, error: e.toString()));
       }
     });
+    on<UpdateTaskStatus>((event, emit) async {
+      emit(state.copyWith(isSubmitting: true, isSuccess: false, error: null));
+
+      try {
+        // Update Hive model
+        event.task.status = event.newStatus;
+        await event.task.save();
+
+        // Success
+        emit(state.copyWith(isSubmitting: false, isSuccess: true));
+      } catch (e) {
+        emit(state.copyWith(isSubmitting: false, error: e.toString()));
+      }
+    });
   }
 }

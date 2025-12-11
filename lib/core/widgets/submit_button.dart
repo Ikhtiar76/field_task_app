@@ -20,7 +20,7 @@ class SubmitButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        minimumSize: const Size(double.infinity, 50),
+        minimumSize: const Size(double.infinity, 45),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadiusGeometry.circular(8),
         ),
@@ -36,7 +36,7 @@ class SubmitButton extends StatelessWidget {
             )
           : Text(
               text ?? "",
-              style: const TextStyle(fontSize: 16, color: Colors.white),
+              style: const TextStyle(fontSize: 12, color: Colors.white),
             ),
     );
   }

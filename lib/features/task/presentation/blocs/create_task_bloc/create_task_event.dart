@@ -38,3 +38,10 @@ class LocationSelected extends CreateTaskEvent {
 }
 
 class SubmitTask extends CreateTaskEvent {}
+
+class UpdateTaskStatus extends CreateTaskEvent {
+  final TaskModel task;
+  final String newStatus;
+
+  UpdateTaskStatus({required this.task, required this.newStatus});
+}

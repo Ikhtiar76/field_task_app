@@ -12,6 +12,7 @@ class ReusableMap extends StatefulWidget {
   final LatLng? initialLocation;
   final double radius;
   final Function(LatLng?)? onPick;
+  final double? distanceInMeters;
 
   const ReusableMap({
     super.key,
@@ -19,6 +20,7 @@ class ReusableMap extends StatefulWidget {
     this.initialLocation,
     this.radius = 100,
     this.onPick,
+    this.distanceInMeters,
   });
 
   @override
@@ -30,7 +32,7 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
 
   LatLng? _currentLocation;
   LatLng? _selectedLocation;
-  double _currentZoom = 15;
+  double _currentZoom = 14.7;
   bool _loading = true;
 
   @override
@@ -126,16 +128,30 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
     final screenHeight = MediaQuery.of(context).size.height;
 
     if (_loading || _currentLocation == null) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(screenHeight * 0.05),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: Colors.grey.shade500),
-              const SizedBox(height: 16),
-              const Text('Getting your location...'),
-            ],
+      return Container(
+        height: screenHeight * 0.4,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(screenHeight * 0.05),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Colors.grey.shade500),
+                const SizedBox(height: 16),
+                const Text('Getting your location...'),
+              ],
+            ),
           ),
         ),
       );
@@ -194,9 +210,32 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
                     point: _selectedLocation!,
                     radius: widget.radius,
                     useRadiusInMeter: true,
-                    borderColor: Colors.blue,
+                    borderColor: widget.mode == MapMode.picker
+                        ? Colors.blue
+                        : (widget.distanceInMeters != null &&
+                              widget.distanceInMeters! <= 100)
+                        ? Colors.green
+                        : Colors.red,
                     borderStrokeWidth: 2,
-                    color: Colors.blue.withOpacity(0.15),
+                    color: widget.mode == MapMode.picker
+                        ? Colors.blue.withOpacity(0.15)
+                        : (widget.distanceInMeters != null &&
+                              widget.distanceInMeters! <= 100)
+                        ? Colors.green.withOpacity(0.15)
+                        : Colors.red.withOpacity(0.15),
+                  ),
+                ],
+              ),
+            if (widget.mode == MapMode.viewer &&
+                _currentLocation != null &&
+                _selectedLocation != null)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: [_currentLocation!, _selectedLocation!],
+                    color: Colors.blueAccent,
+                    strokeWidth: 2,
+                    pattern: StrokePattern.dotted(),
                   ),
                 ],
               ),
@@ -210,9 +249,29 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
                     child: const Icon(
                       Icons.location_on,
                       color: Colors.red,
-                      size: 50,
+                      size: 25,
                     ),
                   ),
+                  if (widget.mode == MapMode.viewer)
+                    Marker(
+                      point: _currentLocation!,
+                      width: 20,
+                      height: 20,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.25),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                      ),
+                    ),
                 ],
               ),
           ],
