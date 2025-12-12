@@ -24,18 +24,24 @@ class TaskRepositoryImpl implements TaskRepository {
 
   @override
   Future<List<TaskModel>> createTasks(TaskModel newTask) async {
-    await _taskBox.put(newTask.id, newTask); // Hive
+    await _taskBox.put(newTask.id, newTask);
     try {
-      await taskCollection.doc(newTask.id).set(newTask.toMap()); // Firebase
+      await taskCollection
+          .doc(newTask.id)
+          .set(newTask.toMap())
+          .timeout(const Duration(seconds: 5), onTimeout: () {});
     } catch (_) {}
     return getTasks();
   }
 
   @override
   Future<List<TaskModel>> updateTasks(TaskModel task) async {
-    await _taskBox.put(task.id, task); // Hive
+    await _taskBox.put(task.id, task);
     try {
-      await taskCollection.doc(task.id).update(task.toMap()); // Firebase
+      await taskCollection
+          .doc(task.id)
+          .update(task.toMap())
+          .timeout(const Duration(seconds: 5));
     } catch (_) {}
     return getTasks();
   }
@@ -45,7 +51,7 @@ class TaskRepositoryImpl implements TaskRepository {
       final snapshot = await taskCollection.get();
       for (var doc in snapshot.docs) {
         final task = TaskModel.fromMap(doc.data() as Map<String, dynamic>);
-        await _taskBox.put(task.id, task); // Hive
+        await _taskBox.put(task.id, task);
       }
     } catch (_) {}
   }
