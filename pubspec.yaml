@@ -45,6 +45,8 @@ dependencies:
   path_provider:
   intl:
   uuid:
+  firebase_core:
+  cloud_firestore:
 
 dev_dependencies:
   flutter_test:

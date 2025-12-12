@@ -1,12 +1,14 @@
 import 'package:field_task_app/features/task/data/repositories/task_hive_repository.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/screens/home_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Firebase.initializeApp();
   await Hive.initFlutter();
   runApp(MyApp());
 }

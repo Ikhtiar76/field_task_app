@@ -12,7 +12,12 @@ import 'package:latlong2/latlong.dart';
 
 class TaskDetailsScreen extends StatefulWidget {
   final TaskModel taskModel;
-  const TaskDetailsScreen({super.key, required this.taskModel});
+  final List<TaskModel> taskModelList;
+  const TaskDetailsScreen({
+    super.key,
+    required this.taskModel,
+    required this.taskModelList,
+  });
 
   @override
   State<TaskDetailsScreen> createState() => _TaskDetailsScreenState();
@@ -141,7 +146,16 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                                 "in progress"
                             ? "Completed"
                             : "In Progress";
-                        if (widget.taskModel.parentTaskId != null) {
+                        if (widget.taskModel.parentTaskId != null &&
+                            widget.taskModelList
+                                    .firstWhere(
+                                      (element) =>
+                                          element.id ==
+                                          widget.taskModel.parentTaskId,
+                                    )
+                                    .status
+                                    .toLowerCase() !=
+                                'completed') {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -163,6 +177,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                           latitude: widget.taskModel.latitude,
                           longitude: widget.taskModel.longitude,
                           status: nextStatus,
+                          parentTaskId: widget.taskModel.parentTaskId,
                         );
                         context.read<CreateTaskBloc>().add(
                           UpdateTaskEvent(task: task),
@@ -284,20 +299,36 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   }
 
   Widget _buildTaskDependency(BuildContext context) {
+    String parentTitle = widget.taskModelList
+        .firstWhere((element) => element.id == widget.taskModel.parentTaskId)
+        .title;
+    bool parentCompleted =
+        widget.taskModel.parentTaskId != null &&
+        widget.taskModelList
+                .firstWhere(
+                  (element) => element.id == widget.taskModel.parentTaskId,
+                )
+                .status
+                .toLowerCase() ==
+            'completed';
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.15),
+        color: (parentCompleted ? Colors.green : Colors.red).withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red),
+        border: Border.all(color: parentCompleted ? Colors.green : Colors.red),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.link, size: 18, color: Colors.red),
+              Icon(
+                Icons.link,
+                size: 18,
+                color: parentCompleted ? Colors.green : Colors.red,
+              ),
               SizedBox(width: 4),
               Text(
                 'Task Dependency',
@@ -312,7 +343,17 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           Padding(
             padding: EdgeInsets.only(left: 24),
             child: Text(
-              'You must complete "Equipment Installation" before starting this task.',
+              (widget.taskModel.parentTaskId != null &&
+                      widget.taskModelList
+                              .firstWhere(
+                                (element) =>
+                                    element.id == widget.taskModel.parentTaskId,
+                              )
+                              .status
+                              .toLowerCase() ==
+                          'completed')
+                  ? '"$parentTitle" completed. You can check in now.'
+                  : 'You must complete "$parentTitle" before starting this task.',
               style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
             ),
           ),

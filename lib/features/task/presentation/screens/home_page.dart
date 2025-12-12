@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, unnecessary_to_list_in_spreads, use_build_context_synchronously
 
+import 'package:field_task_app/core/models/task_model.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/screens/create_task_page.dart';
 import 'package:field_task_app/features/task/presentation/screens/task_details_page.dart';
@@ -80,8 +81,10 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              TaskDetailsScreen(taskModel: task),
+                          builder: (context) => TaskDetailsScreen(
+                            taskModel: task,
+                            taskModelList: state.taskList,
+                          ),
                         ),
                       );
                     },
@@ -91,7 +94,13 @@ class _HomePageState extends State<HomePage> {
                         '${task.dueTime}, ${DateFormat.yMMMd().format(DateTime.parse(task.dueDate ?? ''))}',
                     address:
                         "${task.latitude?.toStringAsFixed(4)}, ${task.longitude?.toStringAsFixed(4)}",
-                    dependency: task.parentTaskId,
+                    dependency: state.taskList
+                        .firstWhere(
+                          (element) => element.id == task.parentTaskId,
+                          orElse: () =>
+                              TaskModel(id: '', title: ''), // <-- Null safe
+                        )
+                        .title,
                     status: task.status,
                     statusColor: task.status.toLowerCase() == "completed"
                         ? Colors.green
@@ -168,7 +177,7 @@ class _HomePageState extends State<HomePage> {
 
                         _buildDetailRow(context, Icons.location_on, address),
 
-                        if (dependency != null) ...[
+                        if (dependency != null && dependency != '') ...[
                           SizedBox(height: screenHeight * 0.004),
                           _buildDetailRow(
                             context,
@@ -182,21 +191,18 @@ class _HomePageState extends State<HomePage> {
                   ),
 
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isSmallScreen ? 8 : 12,
-                      vertical: isSmallScreen ? 4 : 6,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     constraints: BoxConstraints(minWidth: screenWidth * 0.15),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Center(
                       child: Text(
                         status,
                         style: TextStyle(
-                          fontSize: isSmallScreen ? 10 : 12,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
                           color: statusColor,
                         ),
                         textAlign: TextAlign.center,

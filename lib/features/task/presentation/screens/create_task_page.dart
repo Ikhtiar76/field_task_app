@@ -92,9 +92,11 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                     SizedBox(height: screenHeight * 0.005),
                     _buildDeadlineRow(context),
                     SizedBox(height: screenHeight * 0.015),
-                    _buildSectionTitle('Parent Task', opt: '(Optional)'),
-                    SizedBox(height: screenHeight * 0.005),
-                    if (taskList != null && taskList!.isNotEmpty)
+
+                    if (taskList != null && taskList!.isNotEmpty) ...[
+                      _buildSectionTitle('Parent Task', opt: '(Optional)'),
+                      SizedBox(height: screenHeight * 0.005),
+
                       CustomDropdown(
                         value: selectedTaskId,
                         items: taskList ?? [],
@@ -105,7 +107,9 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                           Debugger("Selected: $val");
                         },
                       ),
-                    SizedBox(height: screenHeight * 0.015),
+                      SizedBox(height: screenHeight * 0.015),
+                    ],
+
                     _buildSectionTitle('Choose Location *'),
                     SizedBox(height: screenHeight * 0.005),
                     ReusableMap(
