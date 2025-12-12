@@ -1,22 +1,37 @@
 import 'package:field_task_app/core/models/task_model.dart';
+import 'package:field_task_app/domain/repository/task_repo.dart';
 import 'package:hive/hive.dart';
 
-class TaskHiveRepository {
-  final Box<TaskModel> _box = Hive.box<TaskModel>('tasks');
+class TaskHiveRepository implements TaskRepository {
+  late final Box _taskBox;
 
-  Future<void> addTask(TaskModel task) async {
-    await _box.add(task);
+  @override
+  Future<void> init() async {
+    Hive.registerAdapter(TaskModelAdapter());
+    _taskBox = await Hive.openBox<TaskModel>('tasks');
   }
 
-  List<TaskModel> getAllTasks() {
-    return _box.values.toList();
+  Box get taskBox => _taskBox;
+
+  @override
+  List<TaskModel> getTasks() {
+    final taskList = _taskBox.values.toList();
+    return taskList as List<TaskModel>;
   }
 
-  Future<void> updateTask(TaskModel task) async {
-    await task.save();
+  @override
+  Future<List<TaskModel>> createTasks(TaskModel newTask) async {
+    await _taskBox.add(newTask);
+    return getTasks();
   }
 
-  Future<void> deleteTask(TaskModel task) async {
-    await task.delete();
+  @override
+  Future<List<TaskModel>> updateTasks(TaskModel task) async {
+    final taskToUpdate = await _taskBox.values.firstWhere(
+      (element) => element.id == task.id,
+    );
+    final index = taskToUpdate.key;
+    await _taskBox.put(index, task);
+    return getTasks();
   }
 }

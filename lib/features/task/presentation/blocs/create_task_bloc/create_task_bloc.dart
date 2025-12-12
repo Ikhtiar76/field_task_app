@@ -1,65 +1,67 @@
+import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:field_task_app/core/models/task_model.dart';
+import 'package:field_task_app/features/task/data/repositories/task_hive_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:latlong2/latlong.dart';
 
 part 'create_task_event.dart';
 part 'create_task_state.dart';
 
 class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
-  CreateTaskBloc() : super(CreateTaskState()) {
-    on<TitleChanged>((event, emit) => emit(state.copyWith(title: event.title)));
-    on<DateSelected>(
-      (event, emit) => emit(state.copyWith(selectedDate: event.date)),
-    );
-    on<TimeSelected>(
-      (event, emit) => emit(state.copyWith(selectedTime: event.time)),
-    );
-    on<LocationSelected>(
-      (event, emit) => emit(state.copyWith(selectedLocation: event.location)),
-    );
-    on<SubmitTask>((event, emit) async {
-      if (state.title.isEmpty || state.selectedLocation == null) {
-        emit(state.copyWith(error: "Title or location cannot be empty"));
-        return;
-      }
+  final TaskHiveRepository taskHiveRepository;
+  CreateTaskBloc({required this.taskHiveRepository}) : super(TasksInitial()) {
+    on<InitTaskBox>(_initTaskBox);
+    on<FetchAllTaskEvent>(_fetchAllTask);
+    on<CreateNewTaskEvent>(_createNewTask);
+    on<UpdateTaskEvent>(_updateTask);
+  }
 
-      emit(state.copyWith(isSubmitting: true));
+  FutureOr<void> _fetchAllTask(
+    FetchAllTaskEvent event,
+    Emitter<CreateTaskState> emit,
+  ) async {
+    try {
+      emit(TasksLoading());
+      final taskList = taskHiveRepository.getTasks();
+      emit(TasksLoaded(taskList: taskList));
+    } catch (e) {
+      emit(TasksError(error: e.toString()));
+    }
+  }
 
-      try {
-        final box = Hive.box<TaskModel>('tasks');
+  FutureOr<void> _initTaskBox(
+    InitTaskBox event,
+    Emitter<CreateTaskState> emit,
+  ) async {
+    await taskHiveRepository.init();
+    add(FetchAllTaskEvent());
+  }
 
-        final task = TaskModel(
-          title: state.title,
-          dueDate: state.selectedDate,
-          dueHour: state.selectedTime?.hour,
-          dueMinute: state.selectedTime?.minute,
-          latitude: state.selectedLocation?.latitude,
-          longitude: state.selectedLocation?.longitude,
-        );
+  FutureOr<void> _createNewTask(
+    CreateNewTaskEvent event,
+    Emitter<CreateTaskState> emit,
+  ) async {
+    try {
+      emit(TasksLoading());
+      final newTaskList = await taskHiveRepository.createTasks(event.task);
+      emit(TasksLoaded(taskList: newTaskList));
+    } catch (e) {
+      emit(TasksError(error: e.toString()));
+    }
+  }
 
-        await box.add(task);
-
-        emit(state.copyWith(isSubmitting: false, isSuccess: true));
-      } catch (e) {
-        emit(state.copyWith(isSubmitting: false, error: e.toString()));
-      }
-    });
-    on<UpdateTaskStatus>((event, emit) async {
-      emit(state.copyWith(isSubmitting: true, isSuccess: false, error: null));
-
-      try {
-        // Update Hive model
-        event.task.status = event.newStatus;
-        await event.task.save();
-
-        // Success
-        emit(state.copyWith(isSubmitting: false, isSuccess: true));
-      } catch (e) {
-        emit(state.copyWith(isSubmitting: false, error: e.toString()));
-      }
-    });
+  FutureOr<void> _updateTask(
+    UpdateTaskEvent event,
+    Emitter<CreateTaskState> emit,
+  ) async {
+    try {
+      emit(TasksLoading());
+      final updatedTaskList = await taskHiveRepository.updateTasks(event.task);
+      emit(TasksLoaded(taskList: updatedTaskList));
+    } catch (e) {
+      emit(TasksError(error: e.toString()));
+    }
   }
 }

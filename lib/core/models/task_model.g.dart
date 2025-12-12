@@ -18,9 +18,9 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
     };
     return TaskModel(
       title: fields[0] as String,
-      dueDate: fields[1] as DateTime?,
-      dueHour: fields[2] as int?,
-      dueMinute: fields[3] as int?,
+      dueDate: fields[1] as String?,
+      id: fields[2] as String,
+      dueTime: fields[3] as String?,
       latitude: fields[4] as double?,
       longitude: fields[5] as double?,
       parentTaskId: fields[6] as String?,
@@ -37,9 +37,9 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       ..writeByte(1)
       ..write(obj.dueDate)
       ..writeByte(2)
-      ..write(obj.dueHour)
+      ..write(obj.id)
       ..writeByte(3)
-      ..write(obj.dueMinute)
+      ..write(obj.dueTime)
       ..writeByte(4)
       ..write(obj.latitude)
       ..writeByte(5)

@@ -44,6 +44,7 @@ dependencies:
   hive_flutter:
   path_provider:
   intl:
+  uuid:
 
 dev_dependencies:
   flutter_test:

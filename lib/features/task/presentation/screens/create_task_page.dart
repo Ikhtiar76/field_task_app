@@ -1,7 +1,8 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'package:field_task_app/core/models/task_model.dart';
 import 'package:field_task_app/core/utills/debugger/debugger.dart';
-import 'package:field_task_app/core/widgets/submit_button.dart';
+import 'package:field_task_app/core/widgets/custom_button.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/widgets/custom_textfiled.dart';
 import 'package:field_task_app/features/task/presentation/widgets/date_picker.dart';
@@ -9,6 +10,8 @@ import 'package:field_task_app/features/task/presentation/widgets/map_view.dart'
 import 'package:field_task_app/features/task/presentation/widgets/timer_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:uuid/uuid.dart';
 
 class CreateTaskPage extends StatefulWidget {
   const CreateTaskPage({super.key});
@@ -24,6 +27,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
   final _titleController = TextEditingController();
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
+  LatLng? _latLng;
 
   @override
   Widget build(BuildContext context) {
@@ -42,76 +46,85 @@ class _CreateTaskPageState extends State<CreateTaskPage>
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
       ),
-      body: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: screenWidth * 0.05,
-            vertical: screenHeight * 0.02,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionTitle('Task Title *'),
-                SizedBox(height: screenHeight * 0.005),
-                CustomTextField(
-                  controller: _titleController,
-                  hint: 'Enter the task...',
-                  onChanged: (value) {
-                    context.read<CreateTaskBloc>().add(TitleChanged(value));
-                  },
-                ),
-                SizedBox(height: screenHeight * 0.015),
-                _buildSectionTitle('Due Time *'),
-                SizedBox(height: screenHeight * 0.005),
-                _buildDeadlineRow(context),
-                SizedBox(height: screenHeight * 0.015),
-                _buildSectionTitle('Parent Task', opt: '(Optional)'),
-                SizedBox(height: screenHeight * 0.005),
-                _buildDropDown(context),
-                SizedBox(height: screenHeight * 0.015),
-                _buildSectionTitle('Choose Location *'),
-                SizedBox(height: screenHeight * 0.005),
-                ReusableMap(
-                  mode: MapMode.picker,
-                  onPick: (loc) {
-                    context.read<CreateTaskBloc>().add(LocationSelected(loc!));
-                  },
-                ),
-                SizedBox(height: screenHeight * 0.015),
-                BlocConsumer<CreateTaskBloc, CreateTaskState>(
-                  listener: (context, state) {
-                    if (state.isSuccess) {
-                      Navigator.pop(context);
-                    }
-
-                    if (state.error != null && state.error!.isNotEmpty) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.error!)));
-                    }
-                  },
-                  builder: (context, state) {
-                    return SubmitButton(
-                      text: state.isSubmitting ? null : "+ Add Task",
-                      isLoading: state.isSubmitting,
-                      onPressed: state.isSubmitting
-                          ? null
-                          : () {
-                              context.read<CreateTaskBloc>().add(SubmitTask());
-                            },
+      body: BlocConsumer<CreateTaskBloc, CreateTaskState>(
+        listener: (context, state) {
+          if (state is TasksLoaded) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.fixed,
+                backgroundColor: Colors.green,
+                content: Text('Successfully Task Created!'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            Navigator.pop(context);
+          }
+        },
+        builder: (context, state) {
+          return SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.05,
+                vertical: screenHeight * 0.02,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('Task Title *'),
+                    SizedBox(height: screenHeight * 0.005),
+                    CustomTextField(
+                      controller: _titleController,
+                      hint: 'Enter the task...',
+                      onChanged: (value) {},
+                    ),
+                    SizedBox(height: screenHeight * 0.015),
+                    _buildSectionTitle('Due Time *'),
+                    SizedBox(height: screenHeight * 0.005),
+                    _buildDeadlineRow(context),
+                    SizedBox(height: screenHeight * 0.015),
+                    _buildSectionTitle('Parent Task', opt: '(Optional)'),
+                    SizedBox(height: screenHeight * 0.005),
+                    _buildDropDown(context),
+                    SizedBox(height: screenHeight * 0.015),
+                    _buildSectionTitle('Choose Location *'),
+                    SizedBox(height: screenHeight * 0.005),
+                    ReusableMap(
+                      mode: MapMode.picker,
+                      onPick: (loc) {
+                        setState(() => _latLng = loc);
+                      },
+                    ),
+                    SizedBox(height: screenHeight * 0.015),
+                    CustomButton(
+                      text: state is TasksLoading ? null : "+ Add Task",
+                      isLoading: state is TasksLoading,
+                      onPressed: () {
+                        final task = TaskModel(
+                          title: _titleController.text,
+                          id: Uuid().v4(),
+                          dueDate: _selectedDate.toString(),
+                          dueTime: _selectedTime.toString(),
+                          latitude: _latLng?.latitude,
+                          longitude: _latLng?.longitude,
+                          status: 'Pending',
+                        );
+                        context.read<CreateTaskBloc>().add(
+                          CreateNewTaskEvent(task: task),
+                        );
+                      },
                       color: Colors.blue,
-                    );
-                  },
-                ),
+                    ),
 
-                SizedBox(height: screenHeight * 0.1),
-              ],
+                    SizedBox(height: screenHeight * 0.1),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -151,17 +164,17 @@ class _CreateTaskPageState extends State<CreateTaskPage>
           children: [
             TimePickerField(
               onTimeSelected: (time) {
-                context.read<CreateTaskBloc>().add(TimeSelected(time));
+                setState(() => _selectedTime = time);
               },
-              selectedTime: state.selectedTime,
+              selectedTime: _selectedTime,
               height: 45,
             ),
             SizedBox(width: screenWidth * .01),
             DatePickerField(
               onDateSelected: (date) {
-                context.read<CreateTaskBloc>().add(DateSelected(date));
+                setState(() => _selectedDate = date);
               },
-              selectedDate: state.selectedDate,
+              selectedDate: _selectedDate,
             ),
           ],
         );

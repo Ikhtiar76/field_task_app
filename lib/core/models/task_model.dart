@@ -7,13 +7,13 @@ class TaskModel extends HiveObject {
   String title;
 
   @HiveField(1)
-  DateTime? dueDate;
+  String? dueDate;
 
   @HiveField(2)
-  int? dueHour;
+  String id;
 
   @HiveField(3)
-  int? dueMinute;
+  String? dueTime;
 
   @HiveField(4)
   double? latitude;
@@ -29,8 +29,8 @@ class TaskModel extends HiveObject {
   TaskModel({
     required this.title,
     this.dueDate,
-    this.dueHour,
-    this.dueMinute,
+    required this.id,
+    this.dueTime,
     this.latitude,
     this.longitude,
     this.parentTaskId,

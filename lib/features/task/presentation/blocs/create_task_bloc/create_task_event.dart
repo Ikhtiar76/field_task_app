@@ -5,43 +5,16 @@ abstract class CreateTaskEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class TitleChanged extends CreateTaskEvent {
-  final String title;
-  TitleChanged(this.title);
+class InitTaskBox extends CreateTaskEvent {}
 
-  @override
-  List<Object?> get props => [title];
-}
+class FetchAllTaskEvent extends CreateTaskEvent {}
 
-class DateSelected extends CreateTaskEvent {
-  final DateTime date;
-  DateSelected(this.date);
-
-  @override
-  List<Object?> get props => [date];
-}
-
-class TimeSelected extends CreateTaskEvent {
-  final TimeOfDay time;
-  TimeSelected(this.time);
-
-  @override
-  List<Object?> get props => [time];
-}
-
-class LocationSelected extends CreateTaskEvent {
-  final LatLng location;
-  LocationSelected(this.location);
-
-  @override
-  List<Object?> get props => [location];
-}
-
-class SubmitTask extends CreateTaskEvent {}
-
-class UpdateTaskStatus extends CreateTaskEvent {
+class CreateNewTaskEvent extends CreateTaskEvent {
   final TaskModel task;
-  final String newStatus;
+  CreateNewTaskEvent({required this.task});
+}
 
-  UpdateTaskStatus({required this.task, required this.newStatus});
+class UpdateTaskEvent extends CreateTaskEvent {
+  final TaskModel task;
+  UpdateTaskEvent({required this.task});
 }

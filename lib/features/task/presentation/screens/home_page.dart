@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, unnecessary_to_list_in_spreads, use_build_context_synchronously
 
+import 'package:field_task_app/features/task/data/repositories/task_hive_repository.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/blocs/home_cubit/home_cubit.dart';
 import 'package:field_task_app/features/task/presentation/screens/create_task_page.dart';
@@ -33,23 +34,23 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.05,
-              vertical: screenHeight * 0.02,
+      body: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.05,
+          vertical: screenHeight * 0.02,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'ACTIVE TASKS',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildActiveTasksSection(context),
-                SizedBox(height: screenHeight * .02),
-                _buildCompletedTasksSection(context),
-              ],
-            ),
-          ),
+            SizedBox(height: screenHeight * .01),
+            _buildActiveTasksSection(context),
+            // SizedBox(height: screenHeight * .02),
+            // _buildActiveTasksSection(context),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -57,14 +58,9 @@ class _HomePageState extends State<HomePage> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => BlocProvider(
-                create: (context) => CreateTaskBloc(),
-                child: CreateTaskPage(),
-              ),
-            ),
+            MaterialPageRoute(builder: (context) => CreateTaskPage()),
           );
-          context.read<HomeCubit>().loadTasks();
+          // context.read<HomeCubit>().loadTasks();
         },
         child: Icon(Icons.add, color: Colors.white),
       ),
@@ -72,98 +68,77 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildActiveTasksSection(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
+    return BlocBuilder<CreateTaskBloc, CreateTaskState>(
       builder: (context, state) {
-        final activeTasks = state.tasks
-            .where((t) => t.status.toLowerCase() != 'completed')
-            .toList();
-
-        if (activeTasks.isEmpty) {
-          return const Text("No Active Tasks");
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'ACTIVE TASKS',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-
-            ...activeTasks.map((task) {
-              return _buildTaskCard(
-                onTap: () async {
-                  await Navigator.push(
+        if (state is TasksLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is TasksLoaded) {
+          if (state.taskList.isEmpty) {
+            return Expanded(child: const Center(child: Text("No Task")));
+          } else {
+            return Expanded(
+              child: ListView.builder(
+                itemCount: state.taskList.length,
+                itemBuilder: (context, index) {
+                  final task = state.taskList[index];
+                  return _buildTaskCard(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TaskDetailsScreen(taskModel: task),
+                        ),
+                      );
+                    },
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => BlocProvider(
-                        create: (context) => CreateTaskBloc(),
-                        child: TaskDetailsScreen(taskModel: task),
-                      ),
-                    ),
+                    title: task.title,
+                    time: "time",
+                    address: "${task.latitude}, ${task.longitude}",
+                    dependency: task.parentTaskId,
+                    status: task.status,
+                    statusColor: task.status == "completed"
+                        ? Colors.green
+                        : task.status == "in_progress"
+                        ? Colors.blue
+                        : Colors.orange,
                   );
-                  context.read<HomeCubit>().loadTasks();
                 },
-                context,
-                title: task.title,
-                time:
-                    "${task.dueHour}:${task.dueMinute.toString().padLeft(2, '0')}",
-                address: "${task.latitude}, ${task.longitude}",
-                dependency: task.parentTaskId,
-                status: task.status,
-                statusColor: task.status == "completed"
-                    ? Colors.green
-                    : task.status == "in_progress"
-                    ? Colors.blue
-                    : Colors.orange,
-              );
-            }).toList(),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildCompletedTasksSection(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
-      builder: (context, state) {
-        final completedTasks = state.tasks
-            .where((t) => t.status.toLowerCase() == 'completed')
-            .toList();
-
-        if (completedTasks.isEmpty) {
-          return const Text("No Completed Tasks");
+              ),
+            );
+          }
+        } else if (state is TasksError) {
+          return Center(child: Text(state.error));
         }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'COMPLETED',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-
-            ...completedTasks.map((task) {
-              return _buildTaskCard(
-                onTap: () {},
-                context,
-                title: task.title,
-                time:
-                    "${task.dueHour}:${task.dueMinute.toString().padLeft(2, '0')}",
-                address: "${task.latitude}, ${task.longitude}",
-                dependency: task.parentTaskId,
-                status: "Completed",
-                statusColor: Colors.green,
-                isCompleted: true,
-              );
-            }).toList(),
-          ],
-        );
+        return Container();
       },
     );
   }
+
+  // Widget _buildCompletedTasksSection(BuildContext context) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const Text('COMPLETED', style: TextStyle(fontWeight: FontWeight.w600)),
+  //       const SizedBox(height: 10),
+
+  //       // ...completedTasks.map((task) {
+  //       //   return _buildTaskCard(
+  //       //     onTap: () {},
+  //       //     context,
+  //       //     title: task.title,
+  //       //     time:
+  //       //         "time",
+  //       //     address: "${task.latitude}, ${task.longitude}",
+  //       //     dependency: task.parentTaskId,
+  //       //     status: "Completed",
+  //       //     statusColor: Colors.green,
+  //       //     isCompleted: true,
+  //       //   );
+  //       // }).toList(),
+  //     ],
+  //   );
+  // }
 
   Widget _buildTaskCard(
     BuildContext context, {

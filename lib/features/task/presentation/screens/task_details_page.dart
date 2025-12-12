@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:field_task_app/core/models/task_model.dart';
-import 'package:field_task_app/core/widgets/submit_button.dart';
+import 'package:field_task_app/core/widgets/custom_button.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/widgets/map_view.dart';
 import 'package:flutter/material.dart';
@@ -104,37 +104,10 @@ class TaskDetailsScreen extends StatelessWidget {
             ),
 
             SizedBox(height: screenHeight * 0.015),
-            BlocBuilder<CreateTaskBloc, CreateTaskState>(
-              builder: (context, state) {
-                return SubmitButton(
-                  text: 'Check in at Location',
-                  isLoading: state.isSubmitting,
-                  onPressed: () async {
-                    double distance = await getDistanceFromTask(taskModel);
-
-                    if (distance <= 100) {
-                      String nextStatus = taskModel.status == "in_progress"
-                          ? "completed"
-                          : "in_progress";
-
-                      context.read<CreateTaskBloc>().add(
-                        UpdateTaskStatus(
-                          task: taskModel,
-                          newStatus: nextStatus,
-                        ),
-                      );
-                      Navigator.pop(context);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('You must be within 100m to check in'),
-                        ),
-                      );
-                    }
-                  },
-                  color: Colors.blue,
-                );
-              },
+            CustomButton(
+              text: 'Check in at Location',
+              color: Colors.blue,
+              onPressed: () {},
             ),
 
             SizedBox(height: screenHeight * 0.02),
@@ -210,7 +183,7 @@ class TaskDetailsScreen extends StatelessWidget {
           Icon(Icons.schedule, size: 12, color: Colors.red.shade700),
           SizedBox(width: 4),
           Text(
-            'Due: ${taskModel.dueHour}:${taskModel.dueMinute} ${DateFormat('dd/MM/yy').format(taskModel.dueDate!)}',
+            'Due: ',
             style: TextStyle(
               fontSize: 12,
               color: Colors.red,
