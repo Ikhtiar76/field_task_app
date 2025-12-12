@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:field_task_app/core/utills/date_time_formats/date_time_formats.dart';
+import 'package:field_task_app/core/utills/ui_helper.dart';
 import 'package:flutter/material.dart';
 
 class TimePickerField extends StatelessWidget {
@@ -6,6 +9,7 @@ class TimePickerField extends StatelessWidget {
   final ValueChanged<TimeOfDay> onTimeSelected;
   final String hintText;
   final double height;
+  final DateTime? selectedDate;
 
   const TimePickerField({
     super.key,
@@ -13,6 +17,7 @@ class TimePickerField extends StatelessWidget {
     required this.onTimeSelected,
     this.hintText = "Select Time...",
     this.height = 45,
+    this.selectedDate,
   });
 
   @override
@@ -21,9 +26,20 @@ class TimePickerField extends StatelessWidget {
 
     return GestureDetector(
       onTap: () async {
+        final now = TimeOfDay.now();
+        final initialTime =
+            (selectedDate != null &&
+                selectedDate!.year == DateTime.now().year &&
+                selectedDate!.month == DateTime.now().month &&
+                selectedDate!.day == DateTime.now().day)
+            ? (selectedTime != null && selectedTime!.hour >= now.hour
+                  ? selectedTime!
+                  : now)
+            : (selectedTime ?? TimeOfDay.now());
+
         final tm = await showTimePicker(
           context: context,
-          initialTime: TimeOfDay.now(),
+          initialTime: initialTime,
           builder: (context, child) {
             return Theme(
               data: Theme.of(context).copyWith(
@@ -42,6 +58,20 @@ class TimePickerField extends StatelessWidget {
         );
 
         if (tm != null) {
+          if (selectedDate != null &&
+              selectedDate!.year == DateTime.now().year &&
+              selectedDate!.month == DateTime.now().month &&
+              selectedDate!.day == DateTime.now().day) {
+            if (tm.hour < now.hour ||
+                (tm.hour == now.hour && tm.minute < now.minute)) {
+              UIHelper.showSnackBar(
+                context,
+                'Cannot select past time for today',
+                color: Colors.red,
+              );
+              return;
+            }
+          }
           onTimeSelected(tm);
         }
       },
