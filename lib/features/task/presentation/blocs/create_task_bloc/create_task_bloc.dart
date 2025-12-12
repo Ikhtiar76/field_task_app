@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:field_task_app/core/models/task_model.dart';
-import 'package:field_task_app/features/task/data/repositories/task_hive_repository.dart';
+import 'package:field_task_app/features/task/data/repositories/task_repository_impl.dart';
 
 part 'create_task_event.dart';
 part 'create_task_state.dart';
 
 class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
-  final TaskHiveRepository taskHiveRepository;
+  final TaskRepositoryImpl taskHiveRepository;
   CreateTaskBloc({required this.taskHiveRepository}) : super(TasksInitial()) {
     on<InitTaskBox>(_initTaskBox);
     on<FetchAllTaskEvent>(_fetchAllTask);
@@ -34,6 +34,7 @@ class CreateTaskBloc extends Bloc<CreateTaskEvent, CreateTaskState> {
     Emitter<CreateTaskState> emit,
   ) async {
     await taskHiveRepository.init();
+    await taskHiveRepository.syncFromFirebase();
     add(FetchAllTaskEvent());
   }
 

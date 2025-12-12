@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -64,7 +65,7 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: white,
           title: const Text('Enable Location'),
           content: const Text(
             'Location services are disabled. Please enable GPS to continue.',
@@ -72,10 +73,7 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.black),
-              ),
+              child: const Text('Cancel', style: TextStyle(color: black)),
             ),
             TextButton(
               onPressed: () async {
@@ -84,7 +82,7 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
               },
               child: const Text(
                 'Open Settings',
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(color: black),
               ),
             ),
           ],
@@ -132,10 +130,10 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
         height: screenHeight * 0.4,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: grey.withOpacity(0.3)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: black.withOpacity(0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -147,7 +145,7 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(color: Colors.grey.shade500),
+                CircularProgressIndicator(color: grey.withOpacity(0.5)),
                 const SizedBox(height: 16),
                 const Text('Getting your location...'),
               ],
@@ -167,10 +165,10 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
       height: screenHeight * 0.4,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: grey.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: black.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -215,14 +213,14 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
                         : (widget.distanceInMeters != null &&
                               widget.distanceInMeters! <= 100)
                         ? Colors.green
-                        : Colors.red,
+                        : red,
                     borderStrokeWidth: 2,
                     color: widget.mode == MapMode.picker
                         ? Colors.blue.withOpacity(0.15)
                         : (widget.distanceInMeters != null &&
                               widget.distanceInMeters! <= 100)
                         ? Colors.green.withOpacity(0.15)
-                        : Colors.red.withOpacity(0.15),
+                        : red.withOpacity(0.15),
                   ),
                 ],
               ),
@@ -246,11 +244,7 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
                     point: _selectedLocation!,
                     width: 50,
                     height: 50,
-                    child: const Icon(
-                      Icons.location_on,
-                      color: Colors.red,
-                      size: 25,
-                    ),
+                    child: const Icon(Icons.location_on, color: red, size: 25),
                   ),
                   if (widget.mode == MapMode.viewer)
                     Marker(
@@ -261,14 +255,14 @@ class _ReusableMapState extends State<ReusableMap> with WidgetsBindingObserver {
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.25),
+                              color: black.withOpacity(0.25),
                               blurRadius: 6,
                               offset: Offset(0, 2),
                             ),
                           ],
                           color: Colors.blue,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: white, width: 2),
                         ),
                       ),
                     ),

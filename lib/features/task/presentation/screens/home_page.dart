@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use, unnecessary_to_list_in_spreads, use_build_context_synchronously
 
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:field_task_app/core/models/task_model.dart';
+import 'package:field_task_app/core/widgets/status_badge.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/screens/create_task_page.dart';
 import 'package:field_task_app/features/task/presentation/screens/task_details_page.dart';
@@ -29,8 +31,8 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: white,
+        foregroundColor: black,
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(
@@ -41,7 +43,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'ACTIVE TASKS',
+              'ALL TASKS',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: screenHeight * .01),
@@ -57,7 +59,7 @@ class _HomePageState extends State<HomePage> {
             MaterialPageRoute(builder: (context) => CreateTaskPage()),
           );
         },
-        child: Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: white),
       ),
     );
   }
@@ -69,7 +71,21 @@ class _HomePageState extends State<HomePage> {
           return const Center(child: CircularProgressIndicator());
         } else if (state is TasksLoaded) {
           if (state.taskList.isEmpty) {
-            return Expanded(child: const Center(child: Text("No Task")));
+            return Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.newspaper,
+                      color: grey.withOpacity(0.5),
+                      size: 100,
+                    ),
+                    Text("No Task Available"),
+                  ],
+                ),
+              ),
+            );
           } else {
             return Expanded(
               child: ListView.builder(
@@ -97,8 +113,7 @@ class _HomePageState extends State<HomePage> {
                     dependency: state.taskList
                         .firstWhere(
                           (element) => element.id == task.parentTaskId,
-                          orElse: () =>
-                              TaskModel(id: '', title: ''), // <-- Null safe
+                          orElse: () => TaskModel(id: '', title: ''),
                         )
                         .title,
                     status: task.status,
@@ -134,14 +149,12 @@ class _HomePageState extends State<HomePage> {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenWidth < 360;
-    final isMediumScreen = screenWidth < 400;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: white,
           borderRadius: BorderRadius.circular(6),
         ),
         margin: EdgeInsets.only(bottom: screenHeight * .01),
@@ -161,9 +174,9 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: isSmallScreen ? 14 : 16,
-                            fontWeight: FontWeight.w600,
-                            color: isCompleted ? Colors.grey : Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: isCompleted ? grey : black,
                             decoration: isCompleted
                                 ? TextDecoration.lineThrough
                                 : TextDecoration.none,
@@ -171,14 +184,14 @@ class _HomePageState extends State<HomePage> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: screenHeight * 0.008),
+                        SizedBox(height: screenHeight * 0.01),
 
                         _buildDetailRow(context, Icons.access_time, time),
-
+                        SizedBox(height: screenHeight * 0.005),
                         _buildDetailRow(context, Icons.location_on, address),
 
                         if (dependency != null && dependency != '') ...[
-                          SizedBox(height: screenHeight * 0.004),
+                          SizedBox(height: screenHeight * 0.008),
                           _buildDetailRow(
                             context,
                             Icons.link,
@@ -190,25 +203,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    constraints: BoxConstraints(minWidth: screenWidth * 0.15),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Center(
-                      child: Text(
-                        status,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: statusColor,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+                  StatusBadge(status: status),
                 ],
               ),
             ],
@@ -230,14 +225,14 @@ class _HomePageState extends State<HomePage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: isSmallScreen ? 14 : 16, color: Colors.grey[600]),
+        Icon(icon, size: isSmallScreen ? 14 : 16, color: grey.withOpacity(0.6)),
         SizedBox(width: screenWidth * 0.015),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
               fontSize: isSmallScreen ? 12 : 14,
-              color: Colors.grey[600],
+              color: grey.withOpacity(0.6),
               fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
             ),
             maxLines: 2,

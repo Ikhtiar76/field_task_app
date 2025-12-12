@@ -1,7 +1,12 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
+import 'package:collection/collection.dart';
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:field_task_app/core/models/task_model.dart';
+import 'package:field_task_app/core/utills/location_utils.dart';
+import 'package:field_task_app/core/utills/ui_helper.dart';
 import 'package:field_task_app/core/widgets/custom_button.dart';
+import 'package:field_task_app/core/widgets/status_badge.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/widgets/map_view.dart';
 import 'package:flutter/material.dart';
@@ -33,30 +38,6 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     _loadDistance();
   }
 
-  Future<void> _loadDistance() async {
-    double distanceFromTask = await getDistanceFromTask(widget.taskModel);
-    if (!mounted) return;
-    setState(() {
-      distance = distanceFromTask;
-      mapLoads = true;
-    });
-  }
-
-  Future<double> getDistanceFromTask(TaskModel task) async {
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    double distanceInMeters = Geolocator.distanceBetween(
-      position.latitude,
-      position.longitude,
-      task.latitude!,
-      task.longitude!,
-    );
-
-    return distance = distanceInMeters;
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -66,19 +47,16 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       appBar: AppBar(
         title: Text(
           'Task Details',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w600, color: black),
         ),
       ),
       body: BlocConsumer<CreateTaskBloc, CreateTaskState>(
         listener: (context, state) {
           if (state is TasksLoaded) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                behavior: SnackBarBehavior.fixed,
-                backgroundColor: Colors.green,
-                content: Text('Successfully Task Updated!'),
-                duration: Duration(seconds: 2),
-              ),
+            UIHelper.showSnackBar(
+              context,
+              'Successfully Task Updated!',
+              color: Colors.green,
             );
             Navigator.pop(context);
           }
@@ -139,65 +117,8 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                               : 'Check in at Location'),
                     isLoading: state is TasksLoading,
                     color: Colors.blue,
-                    onPressed: () {
-                      if (distance <= 100) {
-                        String nextStatus =
-                            widget.taskModel.status.toLowerCase() ==
-                                "in progress"
-                            ? "Completed"
-                            : "In Progress";
-                        if (widget.taskModel.parentTaskId != null &&
-                            widget.taskModelList
-                                    .firstWhere(
-                                      (element) =>
-                                          element.id ==
-                                          widget.taskModel.parentTaskId,
-                                    )
-                                    .status
-                                    .toLowerCase() !=
-                                'completed') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                "You must complete Task '' before starting this task.",
-                              ),
-                              behavior: SnackBarBehavior.fixed,
-                              backgroundColor: Colors.red,
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                          return;
-                        }
-
-                        final task = TaskModel(
-                          title: widget.taskModel.title,
-                          id: widget.taskModel.id,
-                          dueDate: widget.taskModel.dueDate,
-                          dueTime: widget.taskModel.dueTime,
-                          latitude: widget.taskModel.latitude,
-                          longitude: widget.taskModel.longitude,
-                          status: nextStatus,
-                          parentTaskId: widget.taskModel.parentTaskId,
-                        );
-                        context.read<CreateTaskBloc>().add(
-                          UpdateTaskEvent(task: task),
-                        );
-                      } else {
-                        final status =
-                            widget.taskModel.status.toLowerCase() ==
-                                "in progress"
-                            ? 'complete'
-                            : 'check in';
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('You must be within 100m to $status'),
-                            behavior: SnackBarBehavior.fixed,
-                            backgroundColor: Colors.red,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: () =>
+                        _handleTaskButtonPress(context.read<CreateTaskBloc>()),
                   ),
 
                 SizedBox(height: screenHeight * 0.02),
@@ -218,7 +139,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     return Container(
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: white,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Column(
@@ -229,7 +150,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(child: _buildTaskTitle(context, title)),
-              _buildPendingStatus(status),
+              StatusBadge(status: status),
             ],
           ),
           SizedBox(height: 8),
@@ -242,41 +163,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   Widget _buildTaskTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: Colors.black,
-      ),
-    );
-  }
-
-  Widget _buildPendingStatus(String status) {
-    final color = status.toLowerCase() == "completed"
-        ? Colors.green
-        : status.toLowerCase() == "in progress"
-        ? Colors.blue
-        : Colors.orange;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.shade50,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.access_time, size: 10, color: color),
-          SizedBox(width: 3),
-          Text(
-            status,
-            style: TextStyle(
-              fontSize: 10,
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: black),
     );
   }
 
@@ -284,13 +171,13 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.schedule, size: 12, color: Colors.grey),
+        Icon(Icons.schedule, size: 12, color: grey),
         SizedBox(width: 2),
         Text(
           'Duetime: $dueTime',
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey,
+            color: grey,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -299,25 +186,16 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
   }
 
   Widget _buildTaskDependency(BuildContext context) {
-    String parentTitle = widget.taskModelList
-        .firstWhere((element) => element.id == widget.taskModel.parentTaskId)
-        .title;
-    bool parentCompleted =
-        widget.taskModel.parentTaskId != null &&
-        widget.taskModelList
-                .firstWhere(
-                  (element) => element.id == widget.taskModel.parentTaskId,
-                )
-                .status
-                .toLowerCase() ==
-            'completed';
+    final parentTask = getParentTask();
+    final parentTitle = parentTask?.title ?? '';
+    final parentCompleted = parentTask?.status.toLowerCase() == 'completed';
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: (parentCompleted ? Colors.green : Colors.red).withOpacity(0.15),
+        color: (parentCompleted ? Colors.green : red).withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: parentCompleted ? Colors.green : Colors.red),
+        border: Border.all(color: parentCompleted ? Colors.green : red),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,7 +205,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
               Icon(
                 Icons.link,
                 size: 18,
-                color: parentCompleted ? Colors.green : Colors.red,
+                color: parentCompleted ? Colors.green : red,
               ),
               SizedBox(width: 4),
               Text(
@@ -335,7 +213,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black,
+                  color: black,
                 ),
               ),
             ],
@@ -343,18 +221,10 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
           Padding(
             padding: EdgeInsets.only(left: 24),
             child: Text(
-              (widget.taskModel.parentTaskId != null &&
-                      widget.taskModelList
-                              .firstWhere(
-                                (element) =>
-                                    element.id == widget.taskModel.parentTaskId,
-                              )
-                              .status
-                              .toLowerCase() ==
-                          'completed')
+              parentCompleted
                   ? '"$parentTitle" completed. You can check in now.'
                   : 'You must complete "$parentTitle" before starting this task.',
-              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 10, color: grey.withOpacity(0.6)),
             ),
           ),
         ],
@@ -366,9 +236,9 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: grey.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -380,7 +250,7 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: black,
               ),
             ),
           ),
@@ -402,5 +272,55 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _loadDistance() async {
+    double distanceFromTask = await LocationUtils.getDistance(
+      widget.taskModel.latitude!,
+      widget.taskModel.longitude!,
+    );
+    if (!mounted) return;
+    setState(() {
+      distance = distanceFromTask;
+      mapLoads = true;
+    });
+  }
+
+  TaskModel? getParentTask() {
+    return widget.taskModelList.firstWhereOrNull(
+      (e) => e.id == widget.taskModel.parentTaskId,
+    );
+  }
+
+  void _handleTaskButtonPress(CreateTaskBloc bloc) {
+    if (distance > 100) {
+      final status = widget.taskModel.status.toLowerCase() == "in progress"
+          ? 'complete'
+          : 'check in';
+      UIHelper.showSnackBar(
+        context,
+        'You must be within 100m to $status',
+        color: red,
+      );
+      return;
+    }
+
+    final parentTask = getParentTask();
+    if (parentTask != null && parentTask.status.toLowerCase() != 'completed') {
+      UIHelper.showSnackBar(
+        context,
+        'You must complete "${parentTask.title}" before starting this task.',
+        color: red,
+      );
+      return;
+    }
+
+    final nextStatus = widget.taskModel.status.toLowerCase() == "in progress"
+        ? "Completed"
+        : "In Progress";
+    final task = widget.taskModel.copyWith(
+      status: nextStatus,
+    ); // use copyWith in model
+    bloc.add(UpdateTaskEvent(task: task));
   }
 }

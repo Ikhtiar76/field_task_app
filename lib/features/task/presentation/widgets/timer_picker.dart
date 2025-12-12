@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:field_task_app/core/utills/date_time_formats/date_time_formats.dart';
 import 'package:field_task_app/core/utills/ui_helper.dart';
 import 'package:flutter/material.dart';
@@ -44,12 +45,12 @@ class TimePickerField extends StatelessWidget {
             return Theme(
               data: Theme.of(context).copyWith(
                 colorScheme: ColorScheme.light(
-                  primary: Colors.black,
-                  onPrimary: Colors.white,
-                  onSurface: Colors.black,
+                  primary: black,
+                  onPrimary: white,
+                  onSurface: black,
                 ),
                 textButtonTheme: TextButtonThemeData(
-                  style: TextButton.styleFrom(foregroundColor: Colors.black),
+                  style: TextButton.styleFrom(foregroundColor: black),
                 ),
               ),
               child: child!,
@@ -67,7 +68,7 @@ class TimePickerField extends StatelessWidget {
               UIHelper.showSnackBar(
                 context,
                 'Cannot select past time for today',
-                color: Colors.red,
+                color: red,
               );
               return;
             }
@@ -79,18 +80,18 @@ class TimePickerField extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         height: height,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: white,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time, color: Colors.grey[500], size: 18),
+            Icon(Icons.access_time, color: grey.withOpacity(0.5), size: 18),
             SizedBox(width: screenWidth * .01),
             Text(
               selectedTime != null
                   ? DateTimeFormats.formatTime(selectedTime!)
                   : hintText,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, color: grey.withOpacity(0.6)),
             ),
           ],
         ),

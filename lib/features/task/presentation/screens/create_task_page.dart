@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously, curly_braces_in_flow_control_structures
 
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:field_task_app/core/models/task_model.dart';
 import 'package:field_task_app/core/utills/date_time_formats/date_time_formats.dart';
 import 'package:field_task_app/core/utills/debugger/debugger.dart';
@@ -48,8 +49,8 @@ class _CreateTaskPageState extends State<CreateTaskPage>
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: white,
+        foregroundColor: black,
       ),
       body: BlocConsumer<CreateTaskBloc, CreateTaskState>(
         listener: (context, state) {
@@ -149,7 +150,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: black,
           ),
         ),
         SizedBox(width: screenWidth * .01),
@@ -159,7 +160,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: Colors.grey.shade500,
+              color: grey.withOpacity(0.5),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -204,7 +205,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
       UIHelper.showSnackBar(
         context,
         'Please provide the following required (*) fields: ${missingFields.join(', ')}',
-        color: Colors.red,
+        color: red,
       );
       return;
     }

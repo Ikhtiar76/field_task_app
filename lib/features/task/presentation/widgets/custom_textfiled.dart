@@ -1,3 +1,4 @@
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -19,7 +20,7 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.keyboardType = TextInputType.text,
     this.filled = true,
-    this.fillColor = Colors.white,
+    this.fillColor = white,
     this.borderRadius = 6,
     this.textStyle,
   });
@@ -31,10 +32,10 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
-      style: textStyle ?? const TextStyle(fontSize: 12, color: Colors.black87),
+      style: textStyle ?? const TextStyle(fontSize: 12, color: black),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey[500]),
+        hintStyle: TextStyle(color: grey.withOpacity(0.5)),
         filled: filled,
         fillColor: fillColor,
         border: OutlineInputBorder(

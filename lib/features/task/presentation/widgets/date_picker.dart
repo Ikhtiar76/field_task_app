@@ -1,3 +1,4 @@
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 
 class DatePickerField extends StatelessWidget {
@@ -31,12 +32,12 @@ class DatePickerField extends StatelessWidget {
               return Theme(
                 data: Theme.of(context).copyWith(
                   colorScheme: ColorScheme.light(
-                    primary: Colors.black,
-                    onPrimary: Colors.white,
-                    onSurface: Colors.black,
+                    primary: black,
+                    onPrimary: white,
+                    onSurface: black,
                   ),
                   textButtonTheme: TextButtonThemeData(
-                    style: TextButton.styleFrom(foregroundColor: Colors.black),
+                    style: TextButton.styleFrom(foregroundColor: black),
                   ),
                 ),
                 child: child!,
@@ -50,7 +51,7 @@ class DatePickerField extends StatelessWidget {
         child: Container(
           height: 45,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: white,
             borderRadius: BorderRadius.circular(6),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -59,7 +60,7 @@ class DatePickerField extends StatelessWidget {
             children: [
               Icon(
                 Icons.calendar_month_outlined,
-                color: Colors.grey[700],
+                color: grey.withOpacity(0.7),
                 size: 18,
               ),
               SizedBox(width: screenWidth * 0.01),
@@ -69,7 +70,7 @@ class DatePickerField extends StatelessWidget {
                     : hint,
                 style: TextStyle(
                   fontSize: 12,
-                  color: selectedDate != null ? Colors.black : Colors.grey[500],
+                  color: selectedDate != null ? black : grey.withOpacity(0.5),
                   fontWeight: FontWeight.normal,
                 ),
               ),

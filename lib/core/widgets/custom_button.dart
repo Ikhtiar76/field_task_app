@@ -1,3 +1,4 @@
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
@@ -31,12 +32,12 @@ class CustomButton extends StatelessWidget {
               width: 22,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor: AlwaysStoppedAnimation<Color>(white),
               ),
             )
           : Text(
               text ?? "",
-              style: const TextStyle(fontSize: 12, color: Colors.white),
+              style: const TextStyle(fontSize: 12, color: white),
             ),
     );
   }

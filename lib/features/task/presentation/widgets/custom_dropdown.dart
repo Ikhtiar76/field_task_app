@@ -1,3 +1,4 @@
+import 'package:field_task_app/core/constants/colors.dart';
 import 'package:field_task_app/core/models/task_model.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,7 @@ class CustomDropdown extends StatelessWidget {
     required this.onChanged,
     this.hint = "Select task...",
     this.borderRadius = 6,
-    this.fillColor = Colors.white,
+    this.fillColor = white,
   });
 
   @override
@@ -32,14 +33,18 @@ class CustomDropdown extends StatelessWidget {
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          icon: Icon(Icons.arrow_drop_down, color: Colors.grey[500], size: 22),
+          icon: Icon(
+            Icons.arrow_drop_down,
+            color: grey.withOpacity(0.5),
+            size: 22,
+          ),
 
           hint: Text(
             hint,
-            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            style: TextStyle(fontSize: 12, color: grey.withOpacity(0.5)),
           ),
 
-          style: const TextStyle(fontSize: 12, color: Colors.black87),
+          style: const TextStyle(fontSize: 12, color: black),
 
           onChanged: onChanged,
 
