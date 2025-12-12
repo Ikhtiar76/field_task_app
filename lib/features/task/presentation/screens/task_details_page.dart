@@ -141,6 +141,19 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                                 "in progress"
                             ? "Completed"
                             : "In Progress";
+                        if (widget.taskModel.parentTaskId != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                "You must complete Task '' before starting this task.",
+                              ),
+                              behavior: SnackBarBehavior.fixed,
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
 
                         final task = TaskModel(
                           title: widget.taskModel.title,

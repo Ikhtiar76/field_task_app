@@ -24,14 +24,15 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       latitude: fields[4] as double?,
       longitude: fields[5] as double?,
       parentTaskId: fields[6] as String?,
-      status: fields[7] as String,
+      parentTaskTitle: fields[7] as String?,
+      status: fields[8] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, TaskModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -47,6 +48,8 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       ..writeByte(6)
       ..write(obj.parentTaskId)
       ..writeByte(7)
+      ..write(obj.parentTaskTitle)
+      ..writeByte(8)
       ..write(obj.status);
   }
 

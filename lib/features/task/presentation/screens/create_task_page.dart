@@ -5,6 +5,7 @@ import 'package:field_task_app/core/utills/date_time_formats/date_time_formats.d
 import 'package:field_task_app/core/utills/debugger/debugger.dart';
 import 'package:field_task_app/core/widgets/custom_button.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
+import 'package:field_task_app/features/task/presentation/widgets/custom_dropdown.dart';
 import 'package:field_task_app/features/task/presentation/widgets/custom_textfiled.dart';
 import 'package:field_task_app/features/task/presentation/widgets/date_picker.dart';
 import 'package:field_task_app/features/task/presentation/widgets/map_view.dart';
@@ -29,6 +30,8 @@ class _CreateTaskPageState extends State<CreateTaskPage>
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   LatLng? _latLng;
+  List<TaskModel>? taskList;
+  String? selectedTaskId;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +65,9 @@ class _CreateTaskPageState extends State<CreateTaskPage>
           }
         },
         builder: (context, state) {
+          if (state is TasksLoaded) {
+            taskList = state.taskList;
+          }
           return SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             child: Padding(
@@ -88,7 +94,17 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                     SizedBox(height: screenHeight * 0.015),
                     _buildSectionTitle('Parent Task', opt: '(Optional)'),
                     SizedBox(height: screenHeight * 0.005),
-                    _buildDropDown(context),
+                    if (taskList != null && taskList!.isNotEmpty)
+                      CustomDropdown(
+                        value: selectedTaskId,
+                        items: taskList ?? [],
+                        onChanged: (val) {
+                          setState(() {
+                            selectedTaskId = val;
+                          });
+                          Debugger("Selected: $val");
+                        },
+                      ),
                     SizedBox(height: screenHeight * 0.015),
                     _buildSectionTitle('Choose Location *'),
                     SizedBox(height: screenHeight * 0.005),
@@ -118,7 +134,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                             dueTime: DateTimeFormats.formatTime(
                               _selectedTime!,
                             ).toString(),
-
+                            parentTaskId: selectedTaskId,
                             latitude: _latLng?.latitude,
                             longitude: _latLng?.longitude,
                             status: 'Pending',
@@ -207,7 +223,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
     );
   }
 
-  Widget _buildDropDown(BuildContext context) {
+  Widget _buildDropDown(BuildContext context, List<TaskModel> taskList) {
     return Container(
       height: 45,
       decoration: BoxDecoration(
@@ -216,7 +232,10 @@ class _CreateTaskPageState extends State<CreateTaskPage>
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          onChanged: (value) {},
+          onChanged: (value) {
+            // TODO: handle selected value
+            print("Selected task id: $value");
+          },
           isExpanded: true,
           icon: Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -239,7 +258,17 @@ class _CreateTaskPageState extends State<CreateTaskPage>
               ],
             ),
           ),
-          items: [],
+
+          // FIXED ITEMS
+          items: taskList.map((task) {
+            return DropdownMenuItem<String>(
+              value: task.id, // unique value required
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(task.title, style: TextStyle(fontSize: 13)),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );

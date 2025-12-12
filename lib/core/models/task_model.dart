@@ -24,6 +24,8 @@ class TaskModel extends HiveObject {
   @HiveField(6)
   String? parentTaskId;
   @HiveField(7)
+  String? parentTaskTitle;
+  @HiveField(8)
   String status;
 
   TaskModel({
@@ -34,6 +36,7 @@ class TaskModel extends HiveObject {
     this.latitude,
     this.longitude,
     this.parentTaskId,
+    this.parentTaskTitle,
     this.status = "pending",
   });
 }

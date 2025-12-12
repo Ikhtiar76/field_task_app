@@ -3,8 +3,6 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:field_task_app/core/models/task_model.dart';
 import 'package:field_task_app/features/task/data/repositories/task_hive_repository.dart';
-import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 
 part 'create_task_event.dart';
 part 'create_task_state.dart';

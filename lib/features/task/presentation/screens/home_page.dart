@@ -20,8 +20,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenWidth < 360;
-    final isMediumScreen = screenWidth < 400;
 
     return Scaffold(
       appBar: AppBar(
@@ -47,8 +45,6 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: screenHeight * .01),
             _buildActiveTasksSection(context),
-            // SizedBox(height: screenHeight * .02),
-            // _buildActiveTasksSection(context),
           ],
         ),
       ),
@@ -59,7 +55,6 @@ class _HomePageState extends State<HomePage> {
             context,
             MaterialPageRoute(builder: (context) => CreateTaskPage()),
           );
-          // context.read<HomeCubit>().loadTasks();
         },
         child: Icon(Icons.add, color: Colors.white),
       ),
@@ -115,31 +110,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
-  // Widget _buildCompletedTasksSection(BuildContext context) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       const Text('COMPLETED', style: TextStyle(fontWeight: FontWeight.w600)),
-  //       const SizedBox(height: 10),
-
-  //       // ...completedTasks.map((task) {
-  //       //   return _buildTaskCard(
-  //       //     onTap: () {},
-  //       //     context,
-  //       //     title: task.title,
-  //       //     time:
-  //       //         "time",
-  //       //     address: "${task.latitude}, ${task.longitude}",
-  //       //     dependency: task.parentTaskId,
-  //       //     status: "Completed",
-  //       //     statusColor: Colors.green,
-  //       //     isCompleted: true,
-  //       //   );
-  //       // }).toList(),
-  //     ],
-  //   );
-  // }
 
   Widget _buildTaskCard(
     BuildContext context, {
