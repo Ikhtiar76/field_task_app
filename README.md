@@ -52,7 +52,6 @@ This project follows **Clean Architecture** principles to ensure scalability, te
 *   **State Management**: `flutter_bloc`
 *   **Local Storage**: `hive` & `hive_flutter` (for offline persistence)
 *   **Maps & Location**: `flutter_map`, `latlong2`, `geolocator`
-*   **Dependency Injection**: `get_it` (implied standard practice)
 
 ---
 
@@ -64,7 +63,7 @@ This project follows **Clean Architecture** principles to ensure scalability, te
 ### How to Run
 1.  **Clone the repository**:
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/Ikhtiar76/field_task_app
     ```
 2.  **Install Dependencies**:
     ```bash
