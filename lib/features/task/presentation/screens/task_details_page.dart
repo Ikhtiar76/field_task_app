@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:field_task_app/core/models/task_model.dart';
 import 'package:field_task_app/core/widgets/custom_button.dart';
@@ -10,17 +10,38 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
-class TaskDetailsScreen extends StatelessWidget {
+class TaskDetailsScreen extends StatefulWidget {
   final TaskModel taskModel;
   const TaskDetailsScreen({super.key, required this.taskModel});
 
+  @override
+  State<TaskDetailsScreen> createState() => _TaskDetailsScreenState();
+}
+
+class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
+  double distance = 0;
+  bool mapLoads = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDistance();
+  }
+
+  Future<void> _loadDistance() async {
+    double distanceFromTask = await getDistanceFromTask(widget.taskModel);
+    if (!mounted) return;
+    setState(() {
+      distance = distanceFromTask;
+      mapLoads = true;
+    });
+  }
+
   Future<double> getDistanceFromTask(TaskModel task) async {
-    // User current location
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
 
-    // Task location
     double distanceInMeters = Geolocator.distanceBetween(
       position.latitude,
       position.longitude,
@@ -28,15 +49,13 @@ class TaskDetailsScreen extends StatelessWidget {
       task.longitude!,
     );
 
-    return distanceInMeters;
+    return distance = distanceInMeters;
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isSmallScreen = screenWidth < 360;
-    final isLargeScreen = screenWidth > 400;
 
     return Scaffold(
       appBar: AppBar(
@@ -45,74 +64,149 @@ class TaskDetailsScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.05,
-          vertical: screenHeight * 0.02,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTaskTitle(context, taskModel.title),
-            SizedBox(height: screenHeight * 0.015),
+      body: BlocConsumer<CreateTaskBloc, CreateTaskState>(
+        listener: (context, state) {
+          if (state is TasksLoaded) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.fixed,
+                backgroundColor: Colors.green,
+                content: Text('Successfully Task Updated!'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            Navigator.pop(context);
+          }
+        },
+        builder: (context, state) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.05,
+              vertical: screenHeight * 0.02,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTitleCard(
+                  context,
+                  widget.taskModel.title,
+                  '${widget.taskModel.dueTime}, ${DateFormat.yMMMd().format(DateTime.parse(widget.taskModel.dueDate ?? ''))}',
+                  widget.taskModel.status,
+                ),
+                SizedBox(height: screenHeight * 0.015),
 
-            _buildStatusAndTime(context, isSmallScreen),
-            SizedBox(height: screenHeight * 0.015),
-
-            _buildTaskDependency(context),
-            SizedBox(height: screenHeight * 0.015),
-            _buildTaskTitle(context, 'Task Location'),
-            SizedBox(height: screenHeight * 0.005),
-            FutureBuilder<double>(
-              future: getDistanceFromTask(taskModel),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Column(
-                    children: [
-                      ReusableMap(
-                        mode: MapMode.viewer,
-                        initialLocation: LatLng(
-                          taskModel.latitude!,
-                          taskModel.longitude!,
-                        ),
-                        radius: 100,
-                        distanceInMeters: 0,
+                if (widget.taskModel.parentTaskId != null) ...[
+                  _buildTaskDependency(context),
+                  SizedBox(height: screenHeight * 0.015),
+                ],
+                _buildTaskTitle(context, 'Task Location'),
+                SizedBox(height: screenHeight * 0.005),
+                ReusableMap(
+                  mode: MapMode.viewer,
+                  initialLocation: LatLng(
+                    widget.taskModel.latitude!,
+                    widget.taskModel.longitude!,
+                  ),
+                  radius: 100,
+                  distanceInMeters: distance,
+                ),
+                SizedBox(height: screenHeight * 0.015),
+                _buildDistance(context, distance),
+                SizedBox(height: screenHeight * 0.015),
+                if (widget.taskModel.status.toLowerCase() == 'completed')
+                  Center(
+                    child: Text(
+                      '‣ Task Completed',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.green,
                       ),
-                      SizedBox(height: screenHeight * 0.015),
-                      _buildDistance(context, 0),
-                    ],
-                  );
-                }
-
-                double distance = snapshot.data!;
-                return Column(
-                  children: [
-                    ReusableMap(
-                      mode: MapMode.viewer,
-                      initialLocation: LatLng(
-                        taskModel.latitude!,
-                        taskModel.longitude!,
-                      ),
-                      radius: 100,
-                      distanceInMeters: distance,
                     ),
-                    SizedBox(height: screenHeight * 0.015),
-                    _buildDistance(context, distance),
-                  ],
-                );
-              },
-            ),
+                  )
+                else if (mapLoads)
+                  CustomButton(
+                    text: state is TasksLoading
+                        ? null
+                        : (widget.taskModel.status.toLowerCase() ==
+                                  "in progress"
+                              ? 'Complete at Location'
+                              : 'Check in at Location'),
+                    isLoading: state is TasksLoading,
+                    color: Colors.blue,
+                    onPressed: () {
+                      if (distance <= 100) {
+                        String nextStatus =
+                            widget.taskModel.status.toLowerCase() ==
+                                "in progress"
+                            ? "Completed"
+                            : "In Progress";
 
-            SizedBox(height: screenHeight * 0.015),
-            CustomButton(
-              text: 'Check in at Location',
-              color: Colors.blue,
-              onPressed: () {},
-            ),
+                        final task = TaskModel(
+                          title: widget.taskModel.title,
+                          id: widget.taskModel.id,
+                          dueDate: widget.taskModel.dueDate,
+                          dueTime: widget.taskModel.dueTime,
+                          latitude: widget.taskModel.latitude,
+                          longitude: widget.taskModel.longitude,
+                          status: nextStatus,
+                        );
+                        context.read<CreateTaskBloc>().add(
+                          UpdateTaskEvent(task: task),
+                        );
+                      } else {
+                        final status =
+                            widget.taskModel.status.toLowerCase() ==
+                                "in progress"
+                            ? 'complete'
+                            : 'check in';
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('You must be within 100m to $status'),
+                            behavior: SnackBarBehavior.fixed,
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                  ),
 
-            SizedBox(height: screenHeight * 0.02),
-          ],
-        ),
+                SizedBox(height: screenHeight * 0.02),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTitleCard(
+    BuildContext context,
+    String title,
+    String dueTime,
+    String status,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: _buildTaskTitle(context, title)),
+              _buildPendingStatus(status),
+            ],
+          ),
+          SizedBox(height: 8),
+          _buildDueTime(dueTime),
+        ],
       ),
     );
   }
@@ -128,36 +222,28 @@ class TaskDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusAndTime(BuildContext context, bool isSmallScreen) {
-    return Row(
-      children: [
-        _buildPendingStatus(isSmallScreen),
-        Spacer(),
-        _buildDueTime(isSmallScreen),
-      ],
-    );
-  }
-
-  Widget _buildPendingStatus(bool isSmallScreen) {
+  Widget _buildPendingStatus(String status) {
+    final color = status.toLowerCase() == "completed"
+        ? Colors.green
+        : status.toLowerCase() == "in progress"
+        ? Colors.blue
+        : Colors.orange;
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallScreen ? 8 : 10,
-        vertical: isSmallScreen ? 3 : 4,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        borderRadius: BorderRadius.circular(12),
+        color: color.shade50,
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.access_time, size: 12, color: Colors.orange),
-          SizedBox(width: isSmallScreen ? 3 : 4),
+          Icon(Icons.access_time, size: 10, color: color),
+          SizedBox(width: 3),
           Text(
-            'Pending',
+            status,
             style: TextStyle(
-              fontSize: 12,
-              color: Colors.orange,
+              fontSize: 10,
+              color: color,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -166,32 +252,21 @@ class TaskDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDueTime(bool isSmallScreen) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmallScreen ? 10 : 12,
-        vertical: isSmallScreen ? 5 : 6,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.shade100),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.schedule, size: 12, color: Colors.red.shade700),
-          SizedBox(width: 4),
-          Text(
-            'Due: ',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.red,
-              fontWeight: FontWeight.w600,
-            ),
+  Widget _buildDueTime(String dueTime) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.schedule, size: 12, color: Colors.grey),
+        SizedBox(width: 2),
+        Text(
+          'Duetime: $dueTime',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+            fontWeight: FontWeight.w400,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -200,16 +275,16 @@ class TaskDetailsScreen extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Colors.red.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Colors.red),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.link, size: 18, color: Colors.blue.shade700),
+              Icon(Icons.link, size: 18, color: Colors.red),
               SizedBox(width: 4),
               Text(
                 'Task Dependency',

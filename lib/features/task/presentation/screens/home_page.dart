@@ -1,12 +1,11 @@
 // ignore_for_file: deprecated_member_use, unnecessary_to_list_in_spreads, use_build_context_synchronously
 
-import 'package:field_task_app/features/task/data/repositories/task_hive_repository.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
-import 'package:field_task_app/features/task/presentation/blocs/home_cubit/home_cubit.dart';
 import 'package:field_task_app/features/task/presentation/screens/create_task_page.dart';
 import 'package:field_task_app/features/task/presentation/screens/task_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -55,8 +54,8 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blueGrey,
-        onPressed: () async {
-          await Navigator.push(
+        onPressed: () {
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => CreateTaskPage()),
           );
@@ -93,13 +92,15 @@ class _HomePageState extends State<HomePage> {
                     },
                     context,
                     title: task.title,
-                    time: "time",
-                    address: "${task.latitude}, ${task.longitude}",
+                    time:
+                        '${task.dueTime}, ${DateFormat.yMMMd().format(DateTime.parse(task.dueDate ?? ''))}',
+                    address:
+                        "${task.latitude?.toStringAsFixed(4)}, ${task.longitude?.toStringAsFixed(4)}",
                     dependency: task.parentTaskId,
                     status: task.status,
-                    statusColor: task.status == "completed"
+                    statusColor: task.status.toLowerCase() == "completed"
                         ? Colors.green
-                        : task.status == "in_progress"
+                        : task.status.toLowerCase() == "in progress"
                         ? Colors.blue
                         : Colors.orange,
                   );

@@ -1,6 +1,7 @@
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously, curly_braces_in_flow_control_structures
 
 import 'package:field_task_app/core/models/task_model.dart';
+import 'package:field_task_app/core/utills/date_time_formats/date_time_formats.dart';
 import 'package:field_task_app/core/utills/debugger/debugger.dart';
 import 'package:field_task_app/core/widgets/custom_button.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
@@ -102,18 +103,42 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                       text: state is TasksLoading ? null : "+ Add Task",
                       isLoading: state is TasksLoading,
                       onPressed: () {
-                        final task = TaskModel(
-                          title: _titleController.text,
-                          id: Uuid().v4(),
-                          dueDate: _selectedDate.toString(),
-                          dueTime: _selectedTime.toString(),
-                          latitude: _latLng?.latitude,
-                          longitude: _latLng?.longitude,
-                          status: 'Pending',
-                        );
-                        context.read<CreateTaskBloc>().add(
-                          CreateNewTaskEvent(task: task),
-                        );
+                        List<String> missingFields = [];
+
+                        if (_titleController.text.isEmpty)
+                          missingFields.add('Title');
+                        if (_selectedDate == null) missingFields.add('Date');
+                        if (_selectedTime == null) missingFields.add('Time');
+                        if (_latLng == null) missingFields.add('Location');
+                        if (missingFields.isEmpty) {
+                          final task = TaskModel(
+                            title: _titleController.text,
+                            id: Uuid().v4(),
+                            dueDate: _selectedDate.toString(),
+                            dueTime: DateTimeFormats.formatTime(
+                              _selectedTime!,
+                            ).toString(),
+
+                            latitude: _latLng?.latitude,
+                            longitude: _latLng?.longitude,
+                            status: 'Pending',
+                          );
+                          context.read<CreateTaskBloc>().add(
+                            CreateNewTaskEvent(task: task),
+                          );
+                        } else {
+                          final missing = missingFields.join(', ');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Please provide the following required (*) fields: $missing',
+                              ),
+                              behavior: SnackBarBehavior.fixed,
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
                       },
                       color: Colors.blue,
                     ),
