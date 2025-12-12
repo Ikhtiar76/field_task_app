@@ -21,9 +21,12 @@ class DatePickerField extends StatelessWidget {
         onTap: () async {
           final dt = await showDatePicker(
             context: context,
-            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+            firstDate: DateTime.now(), // prevent selecting past dates
             lastDate: DateTime.now().add(const Duration(days: 365)),
-            initialDate: selectedDate ?? DateTime.now(),
+            initialDate:
+                selectedDate != null && selectedDate!.isAfter(DateTime.now())
+                ? selectedDate!
+                : DateTime.now(),
             builder: (context, child) {
               return Theme(
                 data: Theme.of(context).copyWith(
