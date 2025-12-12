@@ -3,6 +3,7 @@
 import 'package:field_task_app/core/models/task_model.dart';
 import 'package:field_task_app/core/utills/date_time_formats/date_time_formats.dart';
 import 'package:field_task_app/core/utills/debugger/debugger.dart';
+import 'package:field_task_app/core/utills/ui_helper.dart';
 import 'package:field_task_app/core/widgets/custom_button.dart';
 import 'package:field_task_app/features/task/presentation/blocs/create_task_bloc/create_task_bloc.dart';
 import 'package:field_task_app/features/task/presentation/widgets/custom_dropdown.dart';
@@ -53,13 +54,10 @@ class _CreateTaskPageState extends State<CreateTaskPage>
       body: BlocConsumer<CreateTaskBloc, CreateTaskState>(
         listener: (context, state) {
           if (state is TasksLoaded) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                behavior: SnackBarBehavior.fixed,
-                backgroundColor: Colors.green,
-                content: Text('Successfully Task Created!'),
-                duration: Duration(seconds: 2),
-              ),
+            UIHelper.showSnackBar(
+              context,
+              'Successfully Task Created!',
+              color: Colors.green,
             );
             Navigator.pop(context);
           }
@@ -99,7 +97,12 @@ class _CreateTaskPageState extends State<CreateTaskPage>
 
                       CustomDropdown(
                         value: selectedTaskId,
-                        items: taskList ?? [],
+                        items: (taskList ?? [])
+                            .where(
+                              (task) =>
+                                  task.status.toLowerCase() != 'completed',
+                            )
+                            .toList(),
                         onChanged: (val) {
                           setState(() {
                             selectedTaskId = val;
@@ -122,44 +125,7 @@ class _CreateTaskPageState extends State<CreateTaskPage>
                     CustomButton(
                       text: state is TasksLoading ? null : "+ Add Task",
                       isLoading: state is TasksLoading,
-                      onPressed: () {
-                        List<String> missingFields = [];
-
-                        if (_titleController.text.isEmpty)
-                          missingFields.add('Title');
-                        if (_selectedDate == null) missingFields.add('Date');
-                        if (_selectedTime == null) missingFields.add('Time');
-                        if (_latLng == null) missingFields.add('Location');
-                        if (missingFields.isEmpty) {
-                          final task = TaskModel(
-                            title: _titleController.text,
-                            id: Uuid().v4(),
-                            dueDate: _selectedDate.toString(),
-                            dueTime: DateTimeFormats.formatTime(
-                              _selectedTime!,
-                            ).toString(),
-                            parentTaskId: selectedTaskId,
-                            latitude: _latLng?.latitude,
-                            longitude: _latLng?.longitude,
-                            status: 'Pending',
-                          );
-                          context.read<CreateTaskBloc>().add(
-                            CreateNewTaskEvent(task: task),
-                          );
-                        } else {
-                          final missing = missingFields.join(', ');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Please provide the following required (*) fields: $missing',
-                              ),
-                              behavior: SnackBarBehavior.fixed,
-                              backgroundColor: Colors.red,
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: _onAddTaskPressed,
                       color: Colors.blue,
                     ),
 
@@ -227,55 +193,34 @@ class _CreateTaskPageState extends State<CreateTaskPage>
     );
   }
 
-  Widget _buildDropDown(BuildContext context, List<TaskModel> taskList) {
-    return Container(
-      height: 45,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          onChanged: (value) {
-            // TODO: handle selected value
-            print("Selected task id: $value");
-          },
-          isExpanded: true,
-          icon: Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Icon(
-              Icons.arrow_drop_down,
-              color: Colors.grey[500],
-              size: 24,
-            ),
-          ),
-          hint: Padding(
-            padding: const EdgeInsets.only(left: 12),
-            child: Row(
-              children: [
-                Icon(Icons.link, color: Colors.grey[500], size: 18),
-                SizedBox(width: 8),
-                Text(
-                  'Select task...',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          ),
+  void _onAddTaskPressed() {
+    final missingFields = <String>[];
+    if (_titleController.text.isEmpty) missingFields.add('Title');
+    if (_selectedDate == null) missingFields.add('Date');
+    if (_selectedTime == null) missingFields.add('Time');
+    if (_latLng == null) missingFields.add('Location');
 
-          // FIXED ITEMS
-          items: taskList.map((task) {
-            return DropdownMenuItem<String>(
-              value: task.id, // unique value required
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Text(task.title, style: TextStyle(fontSize: 13)),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+    if (missingFields.isNotEmpty) {
+      UIHelper.showSnackBar(
+        context,
+        'Please provide the following required (*) fields: ${missingFields.join(', ')}',
+        color: Colors.red,
+      );
+      return;
+    }
+
+    final task = TaskModel(
+      title: _titleController.text,
+      id: Uuid().v4(),
+      dueDate: _selectedDate.toString(),
+      dueTime: DateTimeFormats.formatTime(_selectedTime!).toString(),
+      parentTaskId: selectedTaskId,
+      latitude: _latLng?.latitude,
+      longitude: _latLng?.longitude,
+      status: 'Pending',
     );
+
+    context.read<CreateTaskBloc>().add(CreateNewTaskEvent(task: task));
   }
 
   @override
